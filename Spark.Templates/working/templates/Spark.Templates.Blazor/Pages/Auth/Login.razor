@@ -1,4 +1,4 @@
-﻿@page "/login"
+@page "/login"
 @layout AuthLayout
 @code {
 	[Inject] public IConfiguration Configuration { get; set; } = default!;
@@ -8,9 +8,16 @@
 	[CascadingParameter] HttpContext HttpContext { get; set; } = default!;
 
 	[SupplyParameterFromForm]
-	public LoginForm Form { get; set; } = new();
+	public LoginForm Form { get; set; } = default!;
 
 	private string _loginFailedMessage = "";
+
+	protected override void OnInitialized()
+	{
+		// A property initializer on a [SupplyParameterFromForm] property is overwritten with null
+		// during form posts, so the model is created here instead (avoids BL0008).
+		Form ??= new();
+	}
 
 	private async Task LoginUser()
 	{

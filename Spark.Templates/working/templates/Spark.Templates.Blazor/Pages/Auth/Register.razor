@@ -1,4 +1,4 @@
-﻿@page "/register"
+@page "/register"
 @layout AuthLayout
 @code {
 	[Inject] public IConfiguration Configuration { get; set; } = default!;
@@ -10,9 +10,16 @@
 	[CascadingParameter] HttpContext HttpContext { get; set; } = default!;
 
 	[SupplyParameterFromForm]
-	private RegisterForm Form { get; set; } = new();
+	private RegisterForm Form { get; set; } = default!;
 	
 	private string _userExistsMessage = "";
+
+	protected override void OnInitialized()
+	{
+		// A property initializer on a [SupplyParameterFromForm] property is overwritten with null
+		// during form posts, so the model is created here instead (avoids BL0008).
+		Form ??= new();
+	}
 
 	private async Task RegisterUser()
 	{

@@ -8,7 +8,7 @@ using Spark.Templates.Razor.Application.Events;
 using Spark.Templates.Razor.Application.Models;
 using Spark.Templates.Razor.Application.Services.Auth;
 using FluentValidation.Results;
-using FluentValidation.AspNetCore;
+using Spark.Templates.Razor.Application.Extensions;
 
 namespace Spark.Templates.Razor.Pages.Auth;
 

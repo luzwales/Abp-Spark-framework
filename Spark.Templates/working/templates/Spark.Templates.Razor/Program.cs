@@ -6,7 +6,7 @@ using Spark.Library.Routing;
 using Spark.Templates.Razor.Application.Database;
 using Spark.Templates.Razor.Application.Startup;
 using Spark.Templates.Razor.Pages;
-using Vite.AspNetCore.Extensions;
+using Vite.AspNetCore;
 
 
 EnvManager.LoadConfig();
@@ -34,7 +34,8 @@ if (!app.Environment.IsDevelopment())
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseViteDevMiddleware();
+    app.UseWebSockets();
+    app.UseViteDevelopmentServer(true);
 }
 
 app.UseSerilogRequestLogging();

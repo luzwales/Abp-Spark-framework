@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Spark.Templates.Razor.Application.Services.Auth;
 using FluentValidation.Results;
-using FluentValidation.AspNetCore;
+using Spark.Templates.Razor.Application.Extensions;
 
 namespace Spark.Templates.Razor.Pages.Auth;
 

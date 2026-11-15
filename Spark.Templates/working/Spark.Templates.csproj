@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <PackageType>Template</PackageType>
     <PackageTags>Blazor, API, Templates, Framework, UI</PackageTags>
-    <PackageVersion>1.1.0</PackageVersion>
+    <PackageVersion>2.0.0</PackageVersion>
     <PackageId>Spark.Templates</PackageId>
     <Title>Spark.NET Templates</Title>
     <Authors>Weston Walker</Authors>
@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="templates\**\*" Exclude="templates\**\bin\**;templates\**\obj\**" />
+    <Content Include="templates\**\*" Exclude="templates\**\bin\**;templates\**\obj\**;templates\**\node_modules\**" />
     <Compile Remove="**\*" />
   </ItemGroup>
 

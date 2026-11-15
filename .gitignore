@@ -477,3 +477,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Local agent/tool data (not for the public repo)
+.workbuddy/
+.dsh-meow/

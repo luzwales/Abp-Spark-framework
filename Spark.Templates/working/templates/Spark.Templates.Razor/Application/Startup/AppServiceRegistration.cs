@@ -1,4 +1,4 @@
-﻿using Spark.Templates.Razor.Application.Database;
+using Spark.Templates.Razor.Application.Database;
 using Spark.Templates.Razor.Application.Events.Listeners;
 using Spark.Templates.Razor.Application.Services.Auth;
 using Spark.Library.Database;
@@ -6,7 +6,7 @@ using Coravel;
 using Spark.Library.Auth;
 using Spark.Templates.Razor.Application.Jobs;
 using Spark.Library.Mail;
-using Vite.AspNetCore.Extensions;
+using Vite.AspNetCore;
 using FluentValidation;
 using Spark.Templates.Razor.Pages.Auth;
 using Spark.Templates.Razor.Application.Models;

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,9 +30,8 @@ public static class DatabaseServiceRegistration
             var connectionString = $"server={dbHost};port={dbPort};database={dbName};user={dbUser};password={dbPassword};";
             services.AddDbContext<T>(options =>
             {
-                options.UseMySql(
-                    connectionString,
-                    ServerVersion.AutoDetect(connectionString)
+                options.UseMySQL(
+                    connectionString
                 ).UseSnakeCaseNamingConvention();
             });
         }
