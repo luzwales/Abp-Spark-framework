@@ -13,16 +13,12 @@ public class DevCommand
     public void Execute()
     {
         ConsoleOutput.StartAlert(new List<string>() { "Starting dev server" });
-        Process.Start("dotnet", "watch");
-        //var psiNpmRunDist = new ProcessStartInfo
-        //{
-        //    FileName = "cmd",
-        //    RedirectStandardInput = true,
-        //    WorkingDirectory = "./"
-        //};
-        //var pNpmRunDist = Process.Start(psiNpmRunDist);
-        //pNpmRunDist.StandardInput.WriteLine("npx.cmd tailwindcss -i ./Assets/input.css -o ./wwwroot/output.css --watch");
-        //pNpmRunDist.WaitForExit();
-        Process.Start("npx.cmd", "tailwindcss -i ./Assets/input.css -o ./wwwroot/output.css --watch");
+        var process = Process.Start(new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = "watch",
+            UseShellExecute = false
+        });
+        process?.WaitForExit();
     }
 }

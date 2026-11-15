@@ -12,7 +12,9 @@ const baseFolder =
         : `${process.env.HOME}/.aspnet/https`;
 
 // Generate the certificate name using the NPM package name
-const certificateName = process.env.APP_NAME;
+const certificateName = (process.env.APP_NAME && process.env.APP_NAME !== 'ENV_APP_NAME')
+    ? process.env.APP_NAME
+    : 'Spark';
 
 // Define certificate filepath
 const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
