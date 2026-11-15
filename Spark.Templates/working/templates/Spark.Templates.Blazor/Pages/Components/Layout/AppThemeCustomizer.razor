@@ -25,8 +25,8 @@
         <div class="h-full flex flex-col p-6 overflow-y-auto">
             <div class="flex items-center justify-between pb-4">
                 <div>
-                    <h4 class="text-base font-bold text-[#0e1726] dark:text-white font-nunito tracking-wide">THEME SETTINGS</h4>
-                    <p class="text-xs text-[#888ea8]">Customize look & feel preferences</p>
+                    <h4 class="text-base font-bold text-[#0e1726] dark:text-white font-nunito tracking-wide">@L["theme_settings"]</h4>
+                    <p class="text-xs text-[#888ea8]">@L["theme_settings_desc"]</p>
                 </div>
                 <!-- Lucide: X -->
                 <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-[#191e3a] text-[#888ea8] hover:text-[#0e1726] dark:hover:text-white cursor-pointer transition" onclick="window.themeManager?.closeCustomizer()">
@@ -40,8 +40,8 @@
             <div class="space-y-6 py-4">
                 <!-- Color Scheme -->
                 <div>
-                    <h5 class="text-sm font-semibold mb-1 text-[#0e1726] dark:text-white">Color Scheme</h5>
-                    <p class="text-xs text-[#888ea8] mb-3">Select light, dark or system auto theme.</p>
+                    <h5 class="text-sm font-semibold mb-1 text-[#0e1726] dark:text-white">@L["color_scheme"]</h5>
+                    <p class="text-xs text-[#888ea8] mb-3">@L["color_scheme_desc"]</p>
                     <div class="grid grid-cols-3 gap-2">
                         <!-- Light Button with Lucide Sun -->
                         <button type="button"
@@ -53,7 +53,7 @@
                                 <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
                                 <path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
                             </svg>
-                            <span class="text-xs font-semibold">Light</span>
+                            <span class="text-xs font-semibold">@L["light"]</span>
                         </button>
                         <!-- Dark Button with Lucide Moon -->
                         <button type="button"
@@ -63,7 +63,7 @@
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
                             </svg>
-                            <span class="text-xs font-semibold">Dark</span>
+                            <span class="text-xs font-semibold">@L["dark"]</span>
                         </button>
                         <!-- System Button with Lucide Monitor -->
                         <button type="button"
@@ -75,23 +75,23 @@
                                 <line x1="8" x2="16" y1="21" y2="21"/>
                                 <line x1="12" y1="17" x2="12" y2="21"/>
                             </svg>
-                            <span class="text-xs font-semibold">System</span>
+                            <span class="text-xs font-semibold">@L["system"]</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Navigation Bar Position -->
                 <div class="pt-2">
-                    <h5 class="text-sm font-semibold mb-1 text-[#0e1726] dark:text-white">Navbar Type</h5>
-                    <p class="text-xs text-[#888ea8] mb-3">Sticky on scroll or static flow.</p>
+                    <h5 class="text-sm font-semibold mb-1 text-[#0e1726] dark:text-white">@L["navbar_type"]</h5>
+                    <p class="text-xs text-[#888ea8] mb-3">@L["navbar_type_desc"]</p>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="flex items-center gap-2 p-2.5 bg-gray-100 dark:bg-[#121e32] rounded-xl cursor-pointer hover:bg-primary/10 text-xs font-medium text-[#0e1726] dark:text-white transition">
                             <input type="radio" name="navbar_type" value="sticky" checked onchange="window.themeManager?.setNavbarType(this.value)" class="radio radio-primary radio-xs" />
-                            <span>Sticky</span>
+                            <span>@L["sticky"]</span>
                         </label>
                         <label class="flex items-center gap-2 p-2.5 bg-gray-100 dark:bg-[#121e32] rounded-xl cursor-pointer hover:bg-primary/10 text-xs font-medium text-[#0e1726] dark:text-white transition">
                             <input type="radio" name="navbar_type" value="static" onchange="window.themeManager?.setNavbarType(this.value)" class="radio radio-primary radio-xs" />
-                            <span>Static</span>
+                            <span>@L["static"]</span>
                         </label>
                     </div>
                 </div>
@@ -101,7 +101,7 @@
                     <button type="button"
                             class="btn btn-ghost btn-sm w-full bg-danger/10 text-danger hover:bg-danger hover:text-white rounded-xl cursor-pointer transition font-semibold"
                             onclick="localStorage.clear(); window.location.reload();">
-                        Reset To Default
+                        @L["reset_default"]
                     </button>
                 </div>
             </div>

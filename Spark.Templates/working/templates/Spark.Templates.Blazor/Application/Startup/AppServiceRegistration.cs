@@ -10,6 +10,7 @@ using Vite.AspNetCore;
 using FluentValidation;
 using Spark.Templates.Blazor.Pages.Auth;
 using Spark.Templates.Blazor.Application.Models;
+using Spark.Templates.Blazor.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Spark.Templates.Blazor.Application.Startup;
@@ -19,6 +20,7 @@ public static class AppServicesRegistration
     public static IServiceCollection AddAppServices(this IServiceCollection services, IConfiguration config)
     {
         services.AddViteServices();
+        services.AddHttpContextAccessor();
         services.AddCustomServices();
         services.AddDatabase<DatabaseContext>(config);
         services.AddAuthorization(config, new string[] { CustomRoles.Admin, CustomRoles.User });
@@ -45,6 +47,7 @@ public static class AppServicesRegistration
         services.AddScoped<RolesService>();
         services.AddScoped<IAuthValidator, SparkAuthValidator>();
         services.AddScoped<AuthService>();
+        services.AddScoped<I18nService>();
         services.AddScoped<IValidator<Register.RegisterForm>, Register.RegisterFormValidator>();
         return services;
     }

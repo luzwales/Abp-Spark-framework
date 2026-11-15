@@ -59,6 +59,7 @@ import { Sun, Moon } from 'lucide';
         },
         setLanguage(lang) {
             localStorage.setItem('spark_locale', lang);
+            document.cookie = `spark_locale=${lang};path=/;max-age=31536000;SameSite=Lax`;
             this.updateLanguageUI(lang);
             const dd = document.getElementById('lang-dropdown');
             if (dd) {
@@ -67,6 +68,7 @@ import { Sun, Moon } from 'lucide';
             if (document.activeElement && typeof document.activeElement.blur === 'function') {
                 document.activeElement.blur();
             }
+            window.location.reload();
         },
         updateLanguageUI(lang) {
             const current = (lang || this.getStoredLanguage()).toLowerCase();

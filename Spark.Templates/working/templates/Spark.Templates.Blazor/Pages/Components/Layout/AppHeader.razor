@@ -50,7 +50,7 @@
             <!-- Search Input (Borderless Soft Pill) -->
             <div class="hidden md:flex items-center relative">
                 <input type="text"
-                       placeholder="Search here..."
+                       placeholder="@L["search_placeholder"]"
                        class="w-48 lg:w-72 pl-9 pr-4 py-1.5 text-xs rounded-full bg-[#f1f2f3] dark:bg-[#1b2e4b] text-[#0e1726] dark:text-white placeholder-[#888ea8] focus:bg-white dark:focus:bg-[#121e32] focus:shadow-sm focus:outline-none transition" />
                 <!-- Lucide: Search -->
                 <svg class="w-4 h-4 text-[#888ea8] absolute left-3 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -98,7 +98,7 @@
                                 id="lang-item-zh"
                                 class="flex items-center justify-between py-2 px-3 hover:bg-primary/10 hover:text-primary rounded-lg cursor-pointer transition font-medium"
                                 onclick="window.themeManager?.setLanguage('zh')">
-                            <span>简体中文</span>
+                            <span>@L["zh"]</span>
                             <span class="text-[10px] font-bold">ZH</span>
                         </button>
                     </li>
@@ -107,7 +107,7 @@
                                 id="lang-item-en"
                                 class="flex items-center justify-between py-2 px-3 hover:bg-primary/10 hover:text-primary rounded-lg cursor-pointer transition font-medium"
                                 onclick="window.themeManager?.setLanguage('en')">
-                            <span>English</span>
+                            <span>@L["en"]</span>
                             <span class="text-[10px] font-bold">EN</span>
                         </button>
                     </li>
@@ -151,7 +151,7 @@
                                     <rect width="7" height="9" x="14" y="12" rx="1"/>
                                     <rect width="7" height="5" x="3" y="16" rx="1"/>
                                 </svg>
-                                <span>Dashboard</span>
+                                <span>@L["dashboard"]</span>
                             </a>
                         </li>
                         <li>
@@ -161,7 +161,7 @@
                                     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                                     <circle cx="12" cy="7" r="4"/>
                                 </svg>
-                                <span>Profile Settings</span>
+                                <span>@L["profile_settings"]</span>
                             </a>
                         </li>
 
@@ -175,7 +175,7 @@
                                         <polyline points="16 17 21 12 16 7"/>
                                         <line x1="21" y1="12" x2="9" y2="12"/>
                                     </svg>
-                                    <span>Logout</span>
+                                    <span>@L["logout"]</span>
                                 </button>
                             </form>
                         </li>
@@ -187,11 +187,11 @@
                 <div class="flex items-center gap-2">
                     <a href="/login"
                        class="btn btn-sm btn-ghost text-xs font-semibold text-[#0e1726] dark:text-white hover:text-primary">
-                        Login
+                        @L["login"]
                     </a>
                     <a href="/register"
                        class="btn btn-sm btn-primary text-xs font-semibold shadow-sm">
-                        Register
+                        @L["register"]
                     </a>
                 </div>
             }
