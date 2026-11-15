@@ -1,0 +1,90 @@
+name: Publish NuGet packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version, e.g. 2.0.0 (overrides PackageVersion in the csproj files)'
+        required: true
+        type: string
+
+# Trusted Publishing policy to register at https://www.nuget.org/account/trustedpublishing
+#   Policy owner      : your own nuget.org account
+#   Repository Owner  : luzwales
+#   Repository        : Abp-Spark-framework
+#   Workflow File     : publish.yml   (file name only, no .github/workflows/ prefix)
+#   Environment       : leave empty - this job declares no environment
+#   Glob Patterns     : your NEW package IDs, one per line
+#   Scopes            : allow "push new packages" for the first release
+# Docs: https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing
+#
+# Repository secret required: NUGET_USER = your nuget.org profile name (not an email address).
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required for GitHub OIDC -> temporary NuGet API key
+    env:
+      PKG_VERSION: ${{ inputs.version }}
+      PACK_DIR: ${{ github.workspace }}/artifacts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # The upstream Spark.* IDs belong to another nuget.org account. Pushing with
+      # those IDs returns a misleading 403. Fail early with an accurate message.
+      # This check passes automatically once the IDs have been renamed.
+      - name: Guard - refuse upstream package IDs
+        shell: bash
+        run: |
+          if grep -q '<PackageId>Spark\.' \
+               Spark.Library/Spark.Library.csproj \
+               Spark.Console/Spark.Console.csproj \
+               Spark.Templates/working/Spark.Templates.csproj; then
+            echo "::error::PackageId still uses the upstream Spark.* IDs. You are not the owner of those packages on nuget.org, so the push would be rejected with 403. Rename the package IDs first."
+            exit 1
+          fi
+
+      - name: Pack
+        shell: bash
+        run: |
+          mkdir -p "$PACK_DIR"
+          dotnet pack Spark.Library/Spark.Library.csproj \
+            -c Release -o "$PACK_DIR" -p:PackageVersion="$PKG_VERSION"
+          dotnet pack Spark.Console/Spark.Console.csproj \
+            -c Release -o "$PACK_DIR" -p:PackageVersion="$PKG_VERSION"
+          dotnet pack Spark.Templates/working/Spark.Templates.csproj \
+            -c Release -o "$PACK_DIR" -p:PackageVersion="$PKG_VERSION"
+
+      - name: Verify packages
+        shell: bash
+        run: |
+          ls -l "$PACK_DIR"
+          count=$(find "$PACK_DIR" -maxdepth 1 -name '*.nupkg' | wc -l)
+          if [ "$count" -ne 3 ]; then
+            echo "::error::Expected 3 .nupkg files, found $count"
+            exit 1
+          fi
+
+      - name: NuGet login (OIDC -> temporary API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to nuget.org
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          cd "$PACK_DIR"
+          dotnet nuget push "*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
