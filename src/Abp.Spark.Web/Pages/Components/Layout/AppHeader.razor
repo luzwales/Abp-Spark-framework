@@ -1,0 +1,200 @@
+@code {
+    [Parameter] public EventCallback OnToggleSidebar { get; set; }
+    [CascadingParameter] public PageState PageState { get; set; } = default!;
+
+    private string GetUserInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "U";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+}
+
+<header class="z-30 bg-white dark:bg-[#0e1726] shadow-sm sticky top-0 h-[60px] min-h-[60px] flex items-center transition-all duration-300">
+    <div class="flex items-center justify-between px-4 sm:px-6 w-full h-full">
+        <!-- Left: Logo (shown when sidebar collapsed) + Hamburger & Search -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Header Brand Logo (Auto visible when sidebar is collapsed or on mobile) -->
+            <div class="header-logo items-center gap-2 mr-1">
+                <a href="/" class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md">
+                        <!-- Lucide: Sparkles -->
+                        <svg class="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                            <path d="M5 3v4"/>
+                            <path d="M19 17v4"/>
+                            <path d="M3 5h4"/>
+                            <path d="M17 19h4"/>
+                        </svg>
+                    </div>
+                    <span class="uppercase font-extrabold text-base bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:inline font-nunito">
+                        SPARK
+                    </span>
+                </a>
+            </div>
+
+            <!-- Sidebar Toggle Button (Hidden on desktop when sidebar is open; visible when collapsed) -->
+            <button type="button"
+                    class="header-collapse-btn w-9 h-9 rounded-full items-center justify-center hover:bg-gray-100 dark:hover:bg-[#191e3a] text-[#0e1726] dark:text-white transition focus:outline-none cursor-pointer"
+                    onclick="window.themeManager?.toggleSidebar()"
+                    aria-label="Toggle Sidebar">
+                <!-- Lucide: Menu -->
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" x2="20" y1="12" y2="12" />
+                    <line x1="4" x2="20" y1="6" y2="6" />
+                    <line x1="4" x2="20" y1="18" y2="18" />
+                </svg>
+            </button>
+
+            <!-- Search Input (Borderless Soft Pill) -->
+            <div class="hidden md:flex items-center relative">
+                <input type="text"
+                       placeholder="@L["search_placeholder"]"
+                       class="w-48 lg:w-72 pl-9 pr-4 py-1.5 text-xs rounded-full bg-[#f1f2f3] dark:bg-[#1b2e4b] text-[#0e1726] dark:text-white placeholder-[#888ea8] focus:bg-white dark:focus:bg-[#121e32] focus:shadow-sm focus:outline-none transition" />
+                <!-- Lucide: Search -->
+                <svg class="w-4 h-4 text-[#888ea8] absolute left-3 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Right Action Items -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Animated Theme Morph Switcher (Lucide Sun <-> Moon via Morphicons) -->
+            <button type="button"
+                    class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-[#191e3a] text-[#0e1726] dark:text-warning transition focus:outline-none cursor-pointer"
+                    onclick="window.themeManager?.setTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark')"
+                    title="Toggle Dark / Light Mode">
+                <svg class="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path id="theme-morph-path" />
+                </svg>
+            </button>
+
+            <!-- Language Dropdown (With Text Indicator and Auto-close) -->
+            <details class="dropdown dropdown-end" id="lang-dropdown">
+                <summary tabindex="0"
+                         class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#191e3a] text-[#0e1726] dark:text-white cursor-pointer transition list-none focus:outline-none select-none"
+                         title="Language / 语言">
+                    <!-- Lucide: Languages -->
+                    <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m5 8 6 6"/>
+                        <path d="m4 14 6-6 2-3"/>
+                        <path d="M2 5h12"/>
+                        <path d="M7 2h1"/>
+                        <path d="m22 22-5-10-5 10"/>
+                        <path d="M14 18h6"/>
+                    </svg>
+                    <span class="current-lang-text text-xs font-bold uppercase tracking-wide">ZH</span>
+                    <!-- Lucide: ChevronDown -->
+                    <svg class="w-3 h-3 text-[#888ea8] opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                </summary>
+                <ul class="dropdown-content z-50 menu p-1.5 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)] bg-white dark:bg-[#0e1726] rounded-xl w-36 text-xs text-[#0e1726] dark:text-white mt-2 space-y-1">
+                    <li>
+                        <button type="button"
+                                id="lang-item-zh"
+                                class="flex items-center justify-between py-2 px-3 hover:bg-primary/10 hover:text-primary rounded-lg cursor-pointer transition font-medium"
+                                onclick="window.themeManager?.setLanguage('zh')">
+                            <span>@L["zh"]</span>
+                            <span class="text-[10px] font-bold">ZH</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                                id="lang-item-en"
+                                class="flex items-center justify-between py-2 px-3 hover:bg-primary/10 hover:text-primary rounded-lg cursor-pointer transition font-medium"
+                                onclick="window.themeManager?.setLanguage('en')">
+                            <span>@L["en"]</span>
+                            <span class="text-[10px] font-bold">EN</span>
+                        </button>
+                    </li>
+                </ul>
+            </details>
+
+            <!-- User Avatar & Profile Dropdown / Auth Buttons -->
+            @if (PageState.User.IsAuthenticated)
+            {
+                <div class="dropdown dropdown-end">
+                    <label tabindex="0" class="flex items-center gap-2 cursor-pointer p-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#191e3a] transition">
+                        <!-- Avatar circle with initials -->
+                        <div class="w-9 h-9 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-sm shadow-sm">
+                            @GetUserInitials(PageState.User.Name)
+                        </div>
+                        <span class="hidden lg:block text-xs font-semibold text-[#0e1726] dark:text-white max-w-[100px] truncate">
+                            @PageState.User.Name
+                        </span>
+                        <!-- Lucide: ChevronDown -->
+                        <svg class="w-3.5 h-3.5 text-[#888ea8] hidden lg:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                    </label>
+                    <ul tabindex="0"
+                        class="dropdown-content z-50 menu p-2 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)] bg-white dark:bg-[#0e1726] rounded-xl w-56 text-xs text-[#0e1726] dark:text-[#888ea8] mt-2 space-y-1">
+                        <!-- Profile Header Info -->
+                        <li class="p-2 pointer-events-none bg-gray-50 dark:bg-[#121e32] rounded-lg mb-1">
+                            <div class="flex flex-col gap-0.5">
+                                <span class="font-bold text-[#0e1726] dark:text-white text-sm">@PageState.User.Name</span>
+                                <span class="text-[11px] text-[#888ea8] truncate">@PageState.User.Email</span>
+                            </div>
+                        </li>
+
+                        <!-- Menu Links with Lucide Icons -->
+                        <li>
+                            <a href="/dashboard" class="flex items-center gap-2.5 py-2 px-3 hover:text-primary hover:bg-primary/10 rounded-lg transition">
+                                <!-- Lucide: LayoutDashboard -->
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="7" height="9" x="3" y="3" rx="1"/>
+                                    <rect width="7" height="5" x="14" y="3" rx="1"/>
+                                    <rect width="7" height="9" x="14" y="12" rx="1"/>
+                                    <rect width="7" height="5" x="3" y="16" rx="1"/>
+                                </svg>
+                                <span>@L["dashboard"]</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/profile/edit" class="flex items-center gap-2.5 py-2 px-3 hover:text-primary hover:bg-primary/10 rounded-lg transition">
+                                <!-- Lucide: User -->
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span>@L["profile_settings"]</span>
+                            </a>
+                        </li>
+
+                        <!-- Logout Button with Lucide LogOut -->
+                        <li class="pt-1">
+                            <form action="/logout" method="post" class="p-0 w-full">
+                                <button type="submit" class="w-full flex items-center gap-2.5 py-2 px-3 text-danger hover:bg-danger/10 rounded-lg transition font-medium text-left cursor-pointer">
+                                    <!-- Lucide: LogOut -->
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                        <polyline points="16 17 21 12 16 7"/>
+                                        <line x1="21" y1="12" x2="9" y2="12"/>
+                                    </svg>
+                                    <span>@L["logout"]</span>
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <div class="flex items-center gap-2">
+                    <a href="/login"
+                       class="btn btn-sm btn-ghost text-xs font-semibold text-[#0e1726] dark:text-white hover:text-primary">
+                        @L["login"]
+                    </a>
+                    <a href="/register"
+                       class="btn btn-sm btn-primary text-xs font-semibold shadow-sm">
+                        @L["register"]
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</header>

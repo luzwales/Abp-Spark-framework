@@ -1,0 +1,169 @@
+@page "/register"
+@layout AuthLayout
+@using System.Security.Claims
+@using Abp.Spark.Users
+@code {
+	[Inject] public IUserAppService UserAppService { get; set; } = default!;
+	[Inject] public NavigationManager NavigationManager { get; set; } = default!;
+	[CascadingParameter] HttpContext HttpContext { get; set; } = default!;
+
+	[SupplyParameterFromForm]
+	private RegisterForm Form { get; set; } = default!;
+
+	private string _userExistsMessage = "";
+
+	protected override void OnInitialized()
+	{
+		Form ??= new();
+	}
+
+	private async Task RegisterUser()
+	{
+		try
+		{
+			var newUser = await UserAppService.RegisterAsync(new CreateUserDto
+			{
+				Name = Form.Name,
+				Email = Form.Email,
+				Password = Form.Password
+			});
+
+			var claims = new List<Claim>
+			{
+				new(ClaimTypes.NameIdentifier, newUser.Id.ToString()),
+				new(ClaimTypes.Name, newUser.Name),
+				new(ClaimTypes.Email, newUser.Email),
+				new(ClaimTypes.Role, newUser.Role)
+			};
+			var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+			var principal = new ClaimsPrincipal(identity);
+
+			await HttpContext.SignInAsync(
+				CookieAuthenticationDefaults.AuthenticationScheme,
+				principal,
+				new AuthenticationProperties
+				{
+					IsPersistent = false,
+					IssuedUtc = DateTimeOffset.UtcNow,
+					ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+				});
+
+			NavigationManager.NavigateTo("dashboard");
+		}
+		catch (Exception ex)
+		{
+			_userExistsMessage = ex.Message;
+		}
+	}
+
+	public class RegisterForm
+	{
+		public string Name { get; set; } = String.Empty;
+		public string Email { get; set; } = String.Empty;
+		public string Password { get; set; } = String.Empty;
+		public string ConfirmPassword { get; set; } = String.Empty;
+	}
+
+	public class RegisterFormValidator : AbstractValidator<RegisterForm>
+	{
+		private readonly IConfiguration _config;
+		
+		public RegisterFormValidator(IConfiguration config)
+		{
+			_config = config;
+			var minPasswordLength = _config.GetValue<int>("Spark:Auth:Password:MinimumLength", 8);
+			var maxPasswordLength = _config.GetValue<int>("Spark:Auth:Password:MaximumLength", 32);
+			var requireDigit = _config.GetValue<bool>("Spark:Auth:Password:RequireDigit", false);
+			var requireUpper = _config.GetValue<bool>("Spark:Auth:Password:RequireUppercase", false);
+			var requireNonAlphanumeric = _config.GetValue<bool>("Spark:Auth:Password:RequireNonAlphanumeric", false);
+			
+			RuleFor(p => p.Name)
+				.NotEmpty().WithMessage("Name is required");
+			
+			RuleFor(p => p.Email)
+				.NotEmpty().WithMessage("Email address is required")
+				.EmailAddress().WithMessage("Please enter a valid email address");
+			
+			RuleFor(p => p.Password)
+				.NotEmpty().WithMessage("Password is required")
+				.MinimumLength(minPasswordLength).WithMessage($"Password length must be at least {minPasswordLength}.")
+				.MaximumLength(maxPasswordLength).WithMessage($"Password length must not exceed {maxPasswordLength}.");
+
+			if (requireDigit)
+			{
+				RuleFor(p => p.Password)
+					.Matches(@"[0-9]+").WithMessage("Password must contain at least one number.");
+			}
+			if (requireUpper)
+			{
+				RuleFor(p => p.Password)
+					.Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter.");
+			}
+			if (requireNonAlphanumeric)
+			{
+				RuleFor(p => p.Password)
+					.Matches(@"[^a-zA-Z0-9]").WithMessage("Password must contain at least one non-alphanumeric character.");
+			}
+			
+			RuleFor(p => p.ConfirmPassword)
+				.NotEmpty().WithMessage("Confirm password is required")
+				.Equal(model => model.Password).WithMessage("The Password and Confirm Password do not match.");
+		}
+	}
+}
+
+<PageTitle>Register</PageTitle>
+
+<div class="sm:py-12 px-4">
+	<section class="w-full sm:max-w-md mx-auto py-20 flex flex-col justify-center items-center space-y-6">
+		<a href="/">
+			<img src="/images/logo.png" class="h-20 w-auto" />
+		</a>
+		<h1 class="text-center text-3xl font-bold">
+			Create your account
+		</h1>
+		<EditForm Model="Form" OnValidSubmit="@RegisterUser" FormName="RegisterForm" method="post" Enhance class="grid grid-cols-1 gap-y-6 p-6 bg-white mx-auto w-full max-w-md shadow-sm border rounded-md">
+        	<FluentValidationValidator />
+			@if (!String.IsNullOrEmpty(_userExistsMessage))
+			{
+				<div class="mb-1 validation-message">
+					<span>@_userExistsMessage</span>
+				</div>
+			}
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text font-medium">Name</span>
+				</div>
+				<InputText @bind-Value="Form.Name" class="input input-bordered w-full" />
+				<ValidationMessage For="() => Form.Name" />
+            </label>
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text font-medium">Email</span>
+				</div>
+				<InputText @bind-Value="Form.Email" type="email" autocomplete="email" class="input input-bordered w-full" />
+				<ValidationMessage For="() => Form.Email" />
+            </label>
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text font-medium">Password</span>
+				</div>
+				<InputText @bind-Value="Form.Password" type="password" class="input input-bordered w-full" />
+				<ValidationMessage For="() => Form.Password" />
+            </label>
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text font-medium">Confirm Password</span>
+				</div>
+				<InputText @bind-Value="Form.ConfirmPassword" type="password" class="input input-bordered w-full" />
+				<ValidationMessage For="() => Form.ConfirmPassword" />
+            </label>
+            <div class="flex justify-between items-center">
+	            <a href="/login" class="link text-sm mr-2">Already registered?</a>
+	            <button type="submit" class="btn btn-neutral">
+				    Create account
+	            </button>
+            </div>
+		</EditForm>
+	</section>
+</div>

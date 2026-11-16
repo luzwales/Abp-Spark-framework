@@ -1,0 +1,41 @@
+﻿@page "/"
+@code {
+    protected override void OnInitialized()
+    {
+        Log.Information("This is the homepage.");
+    }
+}
+
+<PageTitle>@L["home"]</PageTitle>
+
+<section>
+    <article>
+        <div class="card bg-white dark:bg-[#0e1726] shadow-sm rounded-2xl">
+            <div class="card-body space-y-6 p-6 sm:p-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md">
+                        <!-- Lucide: Sparkles -->
+                        <svg class="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                            <path d="M5 3v4"/>
+                            <path d="M19 17v4"/>
+                            <path d="M3 5h4"/>
+                            <path d="M17 19h4"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito">
+                        @L["welcome_title"]
+                    </h1>
+                </div>
+                <p class="text-sm sm:text-base text-[#506690] dark:text-[#888ea8] leading-relaxed">
+                    @L["welcome_desc"]
+                </p>
+                <div>
+                    <a class="btn btn-primary btn-sm text-xs font-semibold shadow-sm" href="https://spark-framework.net" target="_blank">
+                        @L["view_docs"]
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+</section>
