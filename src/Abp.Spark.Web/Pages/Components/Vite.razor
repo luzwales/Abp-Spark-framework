@@ -5,19 +5,4 @@
 <link rel="stylesheet" href="/build/assets/app.css" />
 <script type="module" src="/build/assets/app.js"></script>
 
-@if (Env.IsDevelopment())
-{
-    <!-- 若开启了本地 Vite HMR 开发热更新服务器 (端口 5173)，自动无缝加载热更模块 -->
-    <script>
-        (function() {
-            var img = new Image();
-            img.onload = function() {
-                var s = document.createElement('script');
-                s.type = 'module';
-                s.src = 'http://localhost:5173/@@vite/client';
-                document.head.appendChild(s);
-            };
-            img.src = 'http://localhost:5173/favicon.ico';
-        })();
-    </script>
-}
+
