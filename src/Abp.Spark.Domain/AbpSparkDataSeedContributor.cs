@@ -7,6 +7,7 @@ using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
+using Volo.Abp.Identity;
 
 namespace Abp.Spark;
 
@@ -14,15 +15,21 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
 {
     private readonly IRepository<AppUser, Guid> _userRepository;
     private readonly IRepository<MenuConfig, Guid> _menuRepository;
+    private readonly OrganizationUnitManager _organizationUnitManager;
+    private readonly IOrganizationUnitRepository _organizationUnitRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public AbpSparkDataSeedContributor(
         IRepository<AppUser, Guid> userRepository,
         IRepository<MenuConfig, Guid> menuRepository,
+        OrganizationUnitManager organizationUnitManager,
+        IOrganizationUnitRepository organizationUnitRepository,
         IGuidGenerator guidGenerator)
     {
         _userRepository = userRepository;
         _menuRepository = menuRepository;
+        _organizationUnitManager = organizationUnitManager;
+        _organizationUnitRepository = organizationUnitRepository;
         _guidGenerator = guidGenerator;
     }
 
@@ -30,6 +37,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
     {
         await SeedUsersAsync();
         await SeedMenusAsync();
+        await SeedOrganizationUnitsAsync();
     }
 
     private async Task SeedUsersAsync()
@@ -110,6 +118,34 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
             );
             await _menuRepository.InsertAsync(child, autoSave: false);
         }
+    }
+
+    private async Task SeedOrganizationUnitsAsync()
+    {
+        if (await _organizationUnitRepository.GetCountAsync() > 0)
+        {
+            return;
+        }
+
+        // 1. 根部门：智能制造运营中心
+        var rootOu = new OrganizationUnit(
+            _guidGenerator.Create(),
+            "智能制造运营中心 (Operations Center)",
+            parentId: null
+        );
+        rootOu.ExtraProperties["ManagerName"] = "Andrew Lu";
+        rootOu.ExtraProperties["ManagerLevel"] = 1;
+        await _organizationUnitManager.CreateAsync(rootOu);
+
+        // 2. 根部门：品质保证与合规中心
+        var qaOu = new OrganizationUnit(
+            _guidGenerator.Create(),
+            "品质保证与合规中心 (QA & Compliance)",
+            parentId: null
+        );
+        qaOu.ExtraProperties["ManagerName"] = "Operator Li";
+        qaOu.ExtraProperties["ManagerLevel"] = 1;
+        await _organizationUnitManager.CreateAsync(qaOu);
     }
 
     private static string HashPassword(string password)
