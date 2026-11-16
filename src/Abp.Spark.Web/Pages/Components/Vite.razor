@@ -1,14 +1,23 @@
-﻿@using Microsoft.Extensions.Hosting;
+﻿@using Microsoft.Extensions.Hosting
 @inject IWebHostEnvironment Env
+
+<!-- 统一引用优化构建后的静态 CSS 与 JS 脚本，保障开发与生产环境 100% 具备完整样式与交互 -->
+<link rel="stylesheet" href="/build/assets/app.css" />
+<script type="module" src="/build/assets/app.js"></script>
 
 @if (Env.IsDevelopment())
 {
-    <script type="module" src="/@@vite/client"></script>
-    <link rel="stylesheet" href="/Assets/Css/app.css">
-    <script type="module" src="/Assets/Js/app.js"></script>
-}
-else
-{
-    <link rel="stylesheet" href="/assets/app.css" />
-    <script type="module" src="/assets/app.js"></script>
+    <!-- 若开启了本地 Vite HMR 开发热更新服务器 (端口 5173)，自动无缝加载热更模块 -->
+    <script>
+        (function() {
+            var img = new Image();
+            img.onload = function() {
+                var s = document.createElement('script');
+                s.type = 'module';
+                s.src = 'http://localhost:5173/@@vite/client';
+                document.head.appendChild(s);
+            };
+            img.src = 'http://localhost:5173/favicon.ico';
+        })();
+    </script>
 }

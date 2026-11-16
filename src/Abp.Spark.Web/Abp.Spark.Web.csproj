@@ -30,4 +30,9 @@
     </Content>
   </ItemGroup>
 
+  <Target Name="EnsureNpmAssets" BeforeTargets="Build" Condition="!Exists('wwwroot\build\assets\app.css')">
+    <Message Importance="high" Text="Building frontend Vite assets..." />
+    <Exec Command="npm run build" />
+  </Target>
+
 </Project>
