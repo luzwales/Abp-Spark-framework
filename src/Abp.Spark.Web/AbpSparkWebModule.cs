@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi;
@@ -64,11 +66,23 @@ public class AbpSparkWebModule : AbpModule
         var app = context.GetApplicationBuilder();
         var env = context.GetEnvironment();
 
-        // 自动初始化数据库架构并种子填充数据
+        // 自动增量迁移数据库架构并种子填充数据
         using (var scope = context.ServiceProvider.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<AbpSparkDbContext>();
-            dbContext.Database.EnsureCreated();
+            var config = context.ServiceProvider.GetRequiredService<IConfiguration>();
+            var provider = (config["Database:Provider"] ?? "SqlServer").Trim().ToLowerInvariant();
+
+            if (provider == "sqlite")
+            {
+                dbContext.Database.EnsureCreated();
+            }
+            else
+            {
+                // SqlServer / PostgreSQL / MySQL 执行标准增量迁移
+                Volo.Abp.Threading.AsyncHelper.RunSync(() => dbContext.Database.MigrateAsync());
+            }
+
             var dataSeeder = scope.ServiceProvider.GetRequiredService<Volo.Abp.Data.IDataSeeder>();
             Volo.Abp.Threading.AsyncHelper.RunSync(() => dataSeeder.SeedAsync(new Volo.Abp.Data.DataSeedContext()));
         }
