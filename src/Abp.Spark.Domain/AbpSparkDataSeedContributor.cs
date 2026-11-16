@@ -11,6 +11,7 @@ using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
 using Volo.Abp.Identity;
+using Volo.Abp.PermissionManagement;
 
 namespace Abp.Spark;
 
@@ -22,6 +23,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
     private readonly IOrganizationUnitRepository _organizationUnitRepository;
     private readonly IDataDictionaryRepository _dataDictionaryRepository;
     private readonly IRepository<Customer, Guid> _customerRepository;
+    private readonly IRepository<PermissionGrant, Guid> _permissionGrantRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public AbpSparkDataSeedContributor(
@@ -31,6 +33,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         IOrganizationUnitRepository organizationUnitRepository,
         IDataDictionaryRepository dataDictionaryRepository,
         IRepository<Customer, Guid> customerRepository,
+        IRepository<PermissionGrant, Guid> permissionGrantRepository,
         IGuidGenerator guidGenerator)
     {
         _userRepository = userRepository;
@@ -39,6 +42,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         _organizationUnitRepository = organizationUnitRepository;
         _dataDictionaryRepository = dataDictionaryRepository;
         _customerRepository = customerRepository;
+        _permissionGrantRepository = permissionGrantRepository;
         _guidGenerator = guidGenerator;
     }
 
@@ -49,6 +53,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         await SeedOrganizationUnitsAsync();
         await SeedDataDictionariesAsync();
         await SeedCustomersAsync();
+        await SeedPermissionsAsync();
     }
 
     private async Task SeedUsersAsync()
@@ -314,6 +319,29 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         foreach (var c in sampleCustomers)
         {
             await _customerRepository.InsertAsync(c, autoSave: false);
+        }
+    }
+
+    private async Task SeedPermissionsAsync()
+    {
+        var mfgPermissions = new[]
+        {
+            "SparkManufacturing.Customers",
+            "SparkManufacturing.Customers.Create",
+            "SparkManufacturing.Customers.Update",
+            "SparkManufacturing.Customers.Delete",
+            "SparkManufacturing.Customers.ManageStatus"
+        };
+
+        foreach (var p in mfgPermissions)
+        {
+            if (!await _permissionGrantRepository.AnyAsync(x => x.Name == p && x.ProviderName == "R" && x.ProviderKey == "Admin"))
+            {
+                await _permissionGrantRepository.InsertAsync(
+                    new PermissionGrant(_guidGenerator.Create(), p, "R", "Admin"),
+                    autoSave: false
+                );
+            }
         }
     }
 

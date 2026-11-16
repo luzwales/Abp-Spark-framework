@@ -1,6 +1,7 @@
 @page "/customers"
-@attribute [Authorize]
+@attribute [Authorize(AbpSparkPermissions.Customers.Default)]
 @inject ICustomerAppService CustomerAppService
+@inject IAuthorizationService AuthorizationService
 @inject NavigationManager NavigationManager
 
 <PageTitle>客户档案管理 - 智能制造 MES/ERP</PageTitle>
@@ -23,12 +24,15 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <button type="button"
-                    class="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition cursor-pointer"
-                    onclick="@OpenCreateModal">
-                <LucideIcon Name="Contact" Class="w-4 h-4 text-white" />
-                <span>新增客户</span>
-            </button>
+            @if (_canCreate)
+            {
+                <button type="button"
+                        class="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition cursor-pointer"
+                        onclick="@OpenCreateModal">
+                    <LucideIcon Name="Contact" Class="w-4 h-4 text-white" />
+                    <span>新增客户</span>
+                </button>
+            }
         </div>
     </div>
 
@@ -141,32 +145,47 @@
                                     @c.SettlementMethod
                                 </td>
                                 <td class="py-3.5 px-3 text-center">
-                                    <button type="button"
-                                            class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition @(c.IsActive ? "bg-success/10 text-success" : "bg-gray-100 text-[#888ea8]")"
-                                            onclick="@(() => ToggleStatusAsync(c.Id))">
-                                        @(c.IsActive ? "● 合作中" : "○ 已冻结")
-                                    </button>
+                                    @if (_canManageStatus)
+                                    {
+                                        <button type="button"
+                                                class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition @(c.IsActive ? "bg-success/10 text-success" : "bg-gray-100 text-[#888ea8]")"
+                                                onclick="@(() => ToggleStatusAsync(c.Id))">
+                                            @(c.IsActive ? "● 合作中" : "○ 已冻结")
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold @(c.IsActive ? "bg-success/10 text-success" : "bg-gray-100 text-[#888ea8]")">
+                                            @(c.IsActive ? "● 合作中" : "○ 已冻结")
+                                        </span>
+                                    }
                                 </td>
                                 <td class="py-3.5 px-3 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button type="button"
-                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-primary hover:bg-primary/10 transition cursor-pointer"
-                                                title="编辑"
-                                                onclick="@(() => OpenEditModal(c))">
-                                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M12 20h9"/>
-                                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                                            </svg>
-                                        </button>
-                                        <button type="button"
-                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
-                                                title="删除"
-                                                onclick="@(() => DeleteCustomerAsync(c.Id))">
-                                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M3 6h18"/>
-                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                            </svg>
-                                        </button>
+                                        @if (_canUpdate)
+                                        {
+                                            <button type="button"
+                                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-primary hover:bg-primary/10 transition cursor-pointer"
+                                                    title="编辑"
+                                                    onclick="@(() => OpenEditModal(c))">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M12 20h9"/>
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                                </svg>
+                                            </button>
+                                        }
+                                        @if (_canDelete)
+                                        {
+                                            <button type="button"
+                                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                                                    title="删除"
+                                                    onclick="@(() => DeleteCustomerAsync(c.Id))">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                                </svg>
+                                            </button>
+                                        }
                                     </div>
                                 </td>
                             </tr>
@@ -294,8 +313,18 @@
     private Guid _editingId = Guid.Empty;
     private CreateUpdateCustomerDto _form = new();
 
+    private bool _canCreate = false;
+    private bool _canUpdate = false;
+    private bool _canDelete = false;
+    private bool _canManageStatus = false;
+
     protected override async Task OnInitializedAsync()
     {
+        _canCreate = await AuthorizationService.IsGrantedAsync(AbpSparkPermissions.Customers.Create);
+        _canUpdate = await AuthorizationService.IsGrantedAsync(AbpSparkPermissions.Customers.Update);
+        _canDelete = await AuthorizationService.IsGrantedAsync(AbpSparkPermissions.Customers.Delete);
+        _canManageStatus = await AuthorizationService.IsGrantedAsync(AbpSparkPermissions.Customers.ManageStatus);
+
         await LoadCustomersAsync();
     }
 

@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Abp.Spark.Permissions;
 
 namespace Abp.Spark.Customers;
 
-[Authorize]
+[Authorize(AbpSparkPermissions.Customers.Default)]
 public class CustomerAppService : ApplicationService, ICustomerAppService
 {
     private readonly IRepository<Customer, Guid> _customerRepository;
@@ -60,6 +61,7 @@ public class CustomerAppService : ApplicationService, ICustomerAppService
         return MapToDto(entity);
     }
 
+    [Authorize(AbpSparkPermissions.Customers.Create)]
     public async Task<CustomerDto> CreateAsync(CreateUpdateCustomerDto input)
     {
         var entity = new Customer(
@@ -83,6 +85,7 @@ public class CustomerAppService : ApplicationService, ICustomerAppService
         return MapToDto(entity);
     }
 
+    [Authorize(AbpSparkPermissions.Customers.Update)]
     public async Task<CustomerDto> UpdateAsync(Guid id, CreateUpdateCustomerDto input)
     {
         var entity = await _customerRepository.GetAsync(id);
@@ -104,11 +107,13 @@ public class CustomerAppService : ApplicationService, ICustomerAppService
         return MapToDto(entity);
     }
 
+    [Authorize(AbpSparkPermissions.Customers.Delete)]
     public async Task DeleteAsync(Guid id)
     {
         await _customerRepository.DeleteAsync(id, autoSave: true);
     }
 
+    [Authorize(AbpSparkPermissions.Customers.ManageStatus)]
     public async Task ToggleStatusAsync(Guid id)
     {
         var entity = await _customerRepository.GetAsync(id);
