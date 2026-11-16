@@ -28,7 +28,7 @@
             try
             {
                 var users = await UserAppService.GetListAsync();
-                var current = users.FirstOrDefault(u => u.Email == email) ?? users.FirstOrDefault();
+                var current = users.FirstOrDefault(u => u.Email == email || u.Name == email) ?? users.FirstOrDefault();
                 if (current != null)
                 {
                     User = current;

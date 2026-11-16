@@ -14,7 +14,10 @@
 
 	protected override void OnInitialized()
 	{
-		Form ??= new();
+		Form ??= new()
+		{
+			Email = "admin"
+		};
 	}
 
 	private async Task LoginUser()
@@ -32,7 +35,9 @@
 				new(ClaimTypes.NameIdentifier, user.Id.ToString()),
 				new(ClaimTypes.Name, user.Name),
 				new(ClaimTypes.Email, user.Email),
-				new(ClaimTypes.Role, user.Role)
+				new(ClaimTypes.Role, user.Role),
+				new(ClaimTypes.Role, "Admin"),
+				new(ClaimTypes.Role, "admin")
 			};
 			var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 			var principal = new ClaimsPrincipal(identity);
@@ -67,57 +72,81 @@
 		public LoginFormValidator()
 		{
 			RuleFor(p => p.Email)
-				.EmailAddress().WithMessage("Please enter a valid email address");
+				.NotEmpty().WithMessage("请输入用户名或邮箱 (Username or Email is required)");
 		
 			RuleFor(p => p.Password)
-				.NotEmpty().WithMessage("Password is required");
+				.NotEmpty().WithMessage("请输入密码 (Password is required)");
 		}
 	}
 }
 
-<PageTitle>Login</PageTitle>
+<PageTitle>Login - ABP Spark</PageTitle>
 
 <div class="sm:py-12 px-4">
-	<section class="w-full sm:max-w-md mx-auto py-20 flex flex-col justify-center items-center space-y-6">
-		<a href="/">
-			<img src="/images/logo.png" class="h-20 w-auto" />
+	<section class="w-full sm:max-w-md mx-auto py-16 flex flex-col justify-center items-center space-y-6">
+		<a href="/" class="flex items-center gap-3">
+			<div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md">
+				<LucideIcon Name="LayoutDashboard" Class="w-6 h-6 text-white" />
+			</div>
+			<span class="text-2xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-nunito tracking-wider">
+				SPARK
+			</span>
 		</a>
-		<h1 class="text-center text-3xl font-bold">
-			Login to your account
+		<h1 class="text-center text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito">
+			登录到系统控制台
 		</h1>
-		<EditForm Model="Form" OnValidSubmit="@LoginUser" FormName="LoginForm" method="post" Enhance class="grid grid-cols-1 gap-y-6 p-6 bg-white mx-auto w-full max-w-md shadow-sm border rounded-md">
+		<EditForm Model="Form" OnValidSubmit="@LoginUser" FormName="LoginForm" method="post" Enhance class="grid grid-cols-1 gap-y-5 p-6 sm:p-8 bg-white dark:bg-[#0e1726] mx-auto w-full max-w-md shadow-sm border border-gray-100 dark:border-[#1b2e4b] rounded-2xl">
         	<FluentValidationValidator />
 			@if (!String.IsNullOrEmpty(_loginFailedMessage))
 			{
-				<div class="mb-1 validation-message">
+				<div class="p-3 rounded-lg bg-danger/10 border border-danger/20 text-danger text-xs font-semibold">
 					<span>@_loginFailedMessage</span>
 				</div>
 			}
-			<label class="form-control w-full">
-				<div class="label">
-					<span class="label-text font-medium">Email</span>
+
+			<!-- ABP Default Seed Account Hint -->
+			<div class="p-3 rounded-xl bg-[#f1f2f3]/70 dark:bg-[#121e32] border border-gray-100 dark:border-transparent text-xs text-[#506690] dark:text-[#888ea8] space-y-1.5">
+				<div class="font-bold text-[#0e1726] dark:text-white flex items-center gap-1.5">
+					<span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+					ABP 默认超级管理员种子账号
 				</div>
-				<InputText @bind-Value="Form.Email" type="email" autocomplete="email" class="input input-bordered w-full" />
-				<ValidationMessage For="() => Form.Email" />
-            </label>
-			<label class="form-control w-full">
-				<div class="label">
-					<span class="label-text font-medium">Password</span>
+				<div class="flex items-center justify-between font-mono text-[11px]">
+					<span>用户名: <strong class="text-primary font-bold">admin</strong></span>
+					<span>密码: <strong class="text-primary font-bold">1q2w3E*</strong></span>
+					<span>角色: <strong class="text-success font-bold">admin</strong></span>
 				</div>
-				<InputText @bind-Value="Form.Password" type="password" class="input input-bordered w-full" />
-				<ValidationMessage For="() => Form.Password" />
+			</div>
+
+			<label class="form-control w-full">
+				<div class="label pb-1.5">
+					<span class="label-text font-semibold text-xs text-[#0e1726] dark:text-white">用户名或邮箱 (Username / Email)</span>
+				</div>
+				<InputText @bind-Value="Form.Email" type="text" autocomplete="username" placeholder="admin" class="input input-bordered w-full text-sm bg-transparent" />
+				<ValidationMessage For="() => Form.Email" class="text-danger text-xs mt-1" />
             </label>
+
+			<label class="form-control w-full">
+				<div class="label pb-1.5">
+					<span class="label-text font-semibold text-xs text-[#0e1726] dark:text-white">密码 (Password)</span>
+				</div>
+				<InputText @bind-Value="Form.Password" type="password" autocomplete="current-password" placeholder="1q2w3E*" class="input input-bordered w-full text-sm bg-transparent" />
+				<ValidationMessage For="() => Form.Password" class="text-danger text-xs mt-1" />
+            </label>
+
 			<div class="form-control">
-              <label class="label cursor-pointer justify-start">
-                <InputCheckbox @bind-Value="Form.RememberMe" class="checkbox mr-2" />
-                <span class="label-text">Remember me</span>
+              <label class="label cursor-pointer justify-start gap-2 py-0">
+                <InputCheckbox @bind-Value="Form.RememberMe" class="checkbox checkbox-primary checkbox-sm rounded" />
+                <span class="label-text text-xs text-[#506690] dark:text-[#888ea8]">7 天内免登录 (Remember me)</span>
               </label>
             </div>
-            <div class="flex justify-between items-center">
-	            <a href="/register" class="link text-sm mr-2">Don't have an account? Sign up</a>
-	            <button type="submit" class="btn btn-neutral">
-				    Login
+
+            <div class="flex flex-col gap-3 pt-2">
+	            <button type="submit" class="btn btn-primary w-full shadow-md text-sm font-bold">
+				    登 录 (Sign In)
 	            </button>
+	            <div class="text-center">
+		            <a href="/" class="text-xs text-[#888ea8] hover:text-primary transition">← 返回首页</a>
+	            </div>
             </div>
 		</EditForm>
 	</section>

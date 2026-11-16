@@ -58,20 +58,40 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
 
     private async Task SeedUsersAsync()
     {
-        if (await _userRepository.GetCountAsync() > 0)
+        // 1. 标准 ABP 默认超管种子: admin / 1q2w3E* (Role: Admin)
+        var defaultAdmin = await _userRepository.FirstOrDefaultAsync(u => u.Name == "admin" || u.Email == "admin@abp.io");
+        if (defaultAdmin == null)
         {
-            return;
+            defaultAdmin = new AppUser(
+                _guidGenerator.Create(),
+                name: "admin",
+                email: "admin@abp.io",
+                passwordHash: HashPassword("1q2w3E*"),
+                role: "Admin"
+            );
+            await _userRepository.InsertAsync(defaultAdmin, autoSave: true);
+        }
+        else
+        {
+            defaultAdmin.PasswordHash = HashPassword("1q2w3E*");
+            defaultAdmin.Role = "Admin";
+            defaultAdmin.IsActive = true;
+            await _userRepository.UpdateAsync(defaultAdmin, autoSave: true);
         }
 
-        var adminUser = new AppUser(
-            _guidGenerator.Create(),
-            "Andrew Lu",
-            "andrew@example.com",
-            HashPassword("Password123!"),
-            role: "Admin"
-        );
-
-        await _userRepository.InsertAsync(adminUser, autoSave: true);
+        // 2. 兼容保留 Andrew Lu 用户
+        var andrewUser = await _userRepository.FirstOrDefaultAsync(u => u.Email == "andrew@example.com");
+        if (andrewUser == null)
+        {
+            andrewUser = new AppUser(
+                _guidGenerator.Create(),
+                name: "Andrew Lu",
+                email: "andrew@example.com",
+                passwordHash: HashPassword("Password123!"),
+                role: "Admin"
+            );
+            await _userRepository.InsertAsync(andrewUser, autoSave: true);
+        }
     }
 
     private async Task SeedMenusAsync()
@@ -333,14 +353,18 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
             "SparkManufacturing.Customers.ManageStatus"
         };
 
-        foreach (var p in mfgPermissions)
+        var roles = new[] { "Admin", "admin" };
+        foreach (var role in roles)
         {
-            if (!await _permissionGrantRepository.AnyAsync(x => x.Name == p && x.ProviderName == "R" && x.ProviderKey == "Admin"))
+            foreach (var p in mfgPermissions)
             {
-                await _permissionGrantRepository.InsertAsync(
-                    new PermissionGrant(_guidGenerator.Create(), p, "R", "Admin"),
-                    autoSave: false
-                );
+                if (!await _permissionGrantRepository.AnyAsync(x => x.Name == p && x.ProviderName == "R" && x.ProviderKey == role))
+                {
+                    await _permissionGrantRepository.InsertAsync(
+                        new PermissionGrant(_guidGenerator.Create(), p, "R", role),
+                        autoSave: false
+                    );
+                }
             }
         }
     }

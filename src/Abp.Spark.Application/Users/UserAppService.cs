@@ -29,7 +29,9 @@ public class UserAppService : ApplicationService, IUserAppService
     public async Task<UserDto> LoginAsync(LoginInputDto input)
     {
         var hash = HashPassword(input.Password);
-        var user = await _userRepository.FirstOrDefaultAsync(u => u.Email == input.Email && u.PasswordHash == hash);
+        var account = input.Email?.Trim() ?? string.Empty;
+        var user = await _userRepository.FirstOrDefaultAsync(u =>
+            (u.Email == account || u.Name == account) && u.PasswordHash == hash);
         if (user == null)
         {
             throw new UserFriendlyException("账号或密码错误");
