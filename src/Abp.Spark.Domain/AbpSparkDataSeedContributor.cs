@@ -3,6 +3,7 @@ using System.Text;
 using Abp.Spark.Domain.Menus;
 using Abp.Spark.Menus;
 using Abp.Spark.Users;
+using Abp.Spark.Customers;
 using Lion.AbpPro.DataDictionaryManagement.DataDictionaries;
 using Lion.AbpPro.DataDictionaryManagement.DataDictionaries.Aggregates;
 using Volo.Abp.Data;
@@ -20,6 +21,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
     private readonly OrganizationUnitManager _organizationUnitManager;
     private readonly IOrganizationUnitRepository _organizationUnitRepository;
     private readonly IDataDictionaryRepository _dataDictionaryRepository;
+    private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public AbpSparkDataSeedContributor(
@@ -28,6 +30,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         OrganizationUnitManager organizationUnitManager,
         IOrganizationUnitRepository organizationUnitRepository,
         IDataDictionaryRepository dataDictionaryRepository,
+        IRepository<Customer, Guid> customerRepository,
         IGuidGenerator guidGenerator)
     {
         _userRepository = userRepository;
@@ -35,6 +38,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         _organizationUnitManager = organizationUnitManager;
         _organizationUnitRepository = organizationUnitRepository;
         _dataDictionaryRepository = dataDictionaryRepository;
+        _customerRepository = customerRepository;
         _guidGenerator = guidGenerator;
     }
 
@@ -44,6 +48,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         await SeedMenusAsync();
         await SeedOrganizationUnitsAsync();
         await SeedDataDictionariesAsync();
+        await SeedCustomersAsync();
     }
 
     private async Task SeedUsersAsync()
@@ -107,7 +112,8 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
             ("AuditLogManagement", "AuditLogs", "FileText", "/audit-logs", 4),
             ("NotificationManagement", "Notifications", "Bell", "/notifications", 5),
             ("DataDictionaryManagement", "DataDictionaries", "BookOpen", "/data-dictionaries", 6),
-            ("TenantManagement", "Tenants", "Building", "/tenants", 7)
+            ("TenantManagement", "Tenants", "Building", "/tenants", 7),
+            ("LanguageManagement", "Languages", "Languages", "/languages", 8)
         };
 
         foreach (var item in subMenus)
@@ -124,6 +130,32 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
             );
             await _menuRepository.InsertAsync(child, autoSave: false);
         }
+
+        // 3. 智能制造业务组
+        var mfgMenuId = _guidGenerator.Create();
+        var mfgMenu = new MenuConfig(
+            mfgMenuId,
+            parentId: null,
+            name: "Manufacturing",
+            label: "Manufacturing",
+            icon: "Factory",
+            route: null,
+            type: SidebarItemType.Group,
+            sortOrder: 15
+        );
+        await _menuRepository.InsertAsync(mfgMenu, autoSave: false);
+
+        var custMenu = new MenuConfig(
+            _guidGenerator.Create(),
+            parentId: mfgMenuId,
+            name: "CustomerManagement",
+            label: "Customers",
+            icon: "Contact",
+            route: "/customers",
+            type: SidebarItemType.Link,
+            sortOrder: 1
+        );
+        await _menuRepository.InsertAsync(custMenu, autoSave: false);
     }
 
     private async Task SeedOrganizationUnitsAsync()
@@ -190,6 +222,98 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
             dict.AddDetail(_guidGenerator.Create(), "FQC", "最终成品检验 (FQC)", 3, "总装下线最终检验");
             dict.AddDetail(_guidGenerator.Create(), "OQC", "出货放行检验 (OQC)", 4, "打包出货前封箱复检");
             await _dataDictionaryRepository.InsertAsync(dict);
+        }
+    }
+
+    private async Task SeedCustomersAsync()
+    {
+        if (await _customerRepository.GetCountAsync() > 0)
+        {
+            return;
+        }
+
+        var sampleCustomers = new List<Customer>
+        {
+            new Customer(
+                _guidGenerator.Create(),
+                code: "CUST-CATL-001",
+                name: "宁德时代新能源科技股份有限公司",
+                shortName: "宁德时代",
+                taxNumber: "91350900587527783P",
+                industryType: "新能源汽车",
+                contactPerson: "林工 (供应链采购总监)",
+                contactPhone: "13959328888",
+                contactEmail: "supply_chain@catl.com",
+                creditLevel: "AAA",
+                settlementMethod: "月结60天",
+                isActive: true,
+                remark: "战略级客户，动力电池 PACK 壳体加工核心直供商"
+            ),
+            new Customer(
+                _guidGenerator.Create(),
+                code: "CUST-BYD-002",
+                name: "比亚迪汽车工业有限公司",
+                shortName: "比亚迪",
+                taxNumber: "9144030079174192XF",
+                industryType: "新能源汽车",
+                contactPerson: "王经理 (整车SQE部)",
+                contactPhone: "13807559988",
+                contactEmail: "sqe_byd@byd.com",
+                creditLevel: "AAA",
+                settlementMethod: "月结60天",
+                isActive: true,
+                remark: "新能源乘用车三电系统五金压铸冲压件重点采购"
+            ),
+            new Customer(
+                _guidGenerator.Create(),
+                code: "CUST-HW-003",
+                name: "华为数字能源技术有限公司",
+                shortName: "华为数字能源",
+                taxNumber: "91440300MA5GMU8M7N",
+                industryType: "光伏储能",
+                contactPerson: "赵专家 (结构件质量把关人)",
+                contactPhone: "13702886677",
+                contactEmail: "quality_hw@huawei.com",
+                creditLevel: "AAA",
+                settlementMethod: "月结30天",
+                isActive: true,
+                remark: "高压逆变器与工商业储能柜机箱高精密钣金采购"
+            ),
+            new Customer(
+                _guidGenerator.Create(),
+                code: "CUST-GOER-004",
+                name: "歌尔股份有限公司",
+                shortName: "歌尔股份",
+                taxNumber: "913707007292552802",
+                industryType: "消费电子",
+                contactPerson: "孙主管 (精密模具采购)",
+                contactPhone: "13605361122",
+                contactEmail: "goertek_mould@goertek.com",
+                creditLevel: "AA",
+                settlementMethod: "月结30天",
+                isActive: true,
+                remark: "VR/AR 声学精密结构件与微型注塑加工"
+            ),
+            new Customer(
+                _guidGenerator.Create(),
+                code: "CUST-NAURA-005",
+                name: "北方华创科技集团股份有限公司",
+                shortName: "北方华创",
+                taxNumber: "91110000722614912Y",
+                industryType: "半导体装备",
+                contactPerson: "陈博士 (半导体核心器件供应链)",
+                contactPhone: "13501003344",
+                contactEmail: "semicon@naura.com",
+                creditLevel: "AA",
+                settlementMethod: "款到发货",
+                isActive: true,
+                remark: "晶圆刻蚀机与薄膜沉积设备高洁净超精密机械腔体件"
+            )
+        };
+
+        foreach (var c in sampleCustomers)
+        {
+            await _customerRepository.InsertAsync(c, autoSave: false);
         }
     }
 

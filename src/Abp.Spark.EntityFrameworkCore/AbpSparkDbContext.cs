@@ -1,5 +1,7 @@
 using Abp.Spark.Domain.Menus;
+using Abp.Spark.Menus;
 using Abp.Spark.Users;
+using Abp.Spark.Customers;
 using Lion.AbpPro.BasicManagement;
 using Lion.AbpPro.DataDictionaryManagement;
 using Lion.AbpPro.LanguageManagement;
@@ -63,6 +65,9 @@ public class AbpSparkDbContext : AbpDbContext<AbpSparkDbContext>,
     public DbSet<Language> Languages { get; set; } = null!;
     public DbSet<LanguageText> LanguageTexts { get; set; } = null!;
 
+    // Customers (Manufacturing Demo)
+    public DbSet<Customer> Customers { get; set; } = null!;
+
     // ABP Framework Core tables
     public DbSet<PermissionGroupDefinitionRecord> PermissionGroups { get; set; } = null!;
     public DbSet<PermissionDefinitionRecord> Permissions { get; set; } = null!;
@@ -108,5 +113,8 @@ public class AbpSparkDbContext : AbpDbContext<AbpSparkDbContext>,
         builder.ConfigureSettingManagement();
         builder.ConfigureFeatureManagement();
         builder.ConfigureAuditLogging();
+
+        // 5. 制造业客户管理
+        builder.ApplyConfiguration(new CustomerConfiguration());
     }
 }
