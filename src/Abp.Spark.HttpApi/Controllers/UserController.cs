@@ -7,6 +7,7 @@ namespace Abp.Spark.Controllers;
 
 [Tags("User")]
 [Route("api/users")]
+[IgnoreAntiforgeryToken]
 public class UserController : AbpControllerBase, IUserAppService
 {
     private readonly IUserAppService _userAppService;

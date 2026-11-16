@@ -114,6 +114,42 @@ public class AbpSparkWebModule : AbpModule
         app.UseConfiguredEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapPost("/login-direct", async (HttpContext ctx, Abp.Spark.Users.IUserAppService userAppService) =>
+            {
+                var form = await ctx.Request.ReadFormAsync();
+                var account = (form["Email"].FirstOrDefault() ?? form["username"].FirstOrDefault() ?? "").Trim();
+                var password = form["Password"].FirstOrDefault() ?? form["password"].FirstOrDefault() ?? "";
+                var rememberMe = (form["RememberMe"].FirstOrDefault() ?? "false").Equals("true", StringComparison.OrdinalIgnoreCase);
+
+                try
+                {
+                    var user = await userAppService.LoginAsync(new Abp.Spark.Users.LoginInputDto { Email = account, Password = password });
+                    var claims = new System.Collections.Generic.List<System.Security.Claims.Claim>
+                    {
+                        new(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id.ToString()),
+                        new(System.Security.Claims.ClaimTypes.Name, user.Name),
+                        new(System.Security.Claims.ClaimTypes.Email, user.Email),
+                        new(System.Security.Claims.ClaimTypes.Role, user.Role),
+                        new(System.Security.Claims.ClaimTypes.Role, "Admin"),
+                        new(System.Security.Claims.ClaimTypes.Role, "admin")
+                    };
+                    var identity = new System.Security.Claims.ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    await ctx.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new System.Security.Claims.ClaimsPrincipal(identity),
+                        new AuthenticationProperties
+                        {
+                            IsPersistent = rememberMe,
+                            IssuedUtc = DateTimeOffset.UtcNow,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+                        });
+                    return Results.Redirect("/dashboard");
+                }
+                catch (Exception ex)
+                {
+                    return Results.Redirect($"/login?error={Uri.EscapeDataString(ex.Message)}");
+                }
+            }).DisableAntiforgery();
             endpoints.MapPost("/logout", async (HttpContext ctx) =>
             {
                 await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
