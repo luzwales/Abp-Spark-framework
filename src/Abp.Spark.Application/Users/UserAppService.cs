@@ -57,6 +57,41 @@ public class UserAppService : ApplicationService, IUserAppService
         return ObjectMapper.Map<List<AppUser>, List<UserDto>>(users);
     }
 
+    public async Task<UserDto> CreateAsync(CreateUserDto input)
+    {
+        var exists = await _userRepository.AnyAsync(u => u.Email == input.Email);
+        if (exists)
+        {
+            throw new UserFriendlyException("该邮箱已被注册");
+        }
+
+        var hash = HashPassword(input.Password);
+        var user = new AppUser(GuidGenerator.Create(), input.Name, input.Email, hash, role: input.Role);
+        await _userRepository.InsertAsync(user, autoSave: true);
+        return ObjectMapper.Map<AppUser, UserDto>(user);
+    }
+
+    public async Task<UserDto> UpdateAsync(Guid id, UpdateUserDto input)
+    {
+        var user = await _userRepository.GetAsync(id);
+        user.Name = input.Name;
+        user.Role = input.Role;
+        user.IsActive = input.IsActive;
+
+        if (!string.IsNullOrWhiteSpace(input.Password))
+        {
+            user.PasswordHash = HashPassword(input.Password);
+        }
+
+        await _userRepository.UpdateAsync(user, autoSave: true);
+        return ObjectMapper.Map<AppUser, UserDto>(user);
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        await _userRepository.DeleteAsync(id, autoSave: true);
+    }
+
     private static string HashPassword(string password)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));

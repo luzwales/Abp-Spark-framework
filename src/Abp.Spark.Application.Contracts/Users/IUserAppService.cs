@@ -8,6 +8,17 @@ public interface IUserAppService : IApplicationService
     Task<UserDto> LoginAsync(LoginInputDto input);
     Task<UserDto> RegisterAsync(CreateUserDto input);
     Task<List<UserDto>> GetListAsync();
+    Task<UserDto> CreateAsync(CreateUserDto input);
+    Task<UserDto> UpdateAsync(Guid id, UpdateUserDto input);
+    Task DeleteAsync(Guid id);
+}
+
+public class UpdateUserDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Role { get; set; } = "User";
+    public bool IsActive { get; set; } = true;
+    public string? Password { get; set; }
 }
 
 public class UserDto
@@ -26,6 +37,7 @@ public class CreateUserDto
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string Role { get; set; } = "User";
 }
 
 public class LoginInputDto

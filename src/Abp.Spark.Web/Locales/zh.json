@@ -30,5 +30,14 @@
     "welcome_title": "构建精彩的全栈应用",
     "welcome_desc": "Spark 延续了 ASP.NET Core 的强劲性能，让企业级全栈 Web 开发更加高效纯粹。",
     "view_docs": "查阅官方开发文档 →",
-    "logged_in_msg": "您已成功登录系统！"
+    "logged_in_msg": "您已成功登录系统！",
+    "System": "系统管理",
+    "Dashboard": "仪表盘",
+    "Users": "用户管理",
+    "Roles": "角色权限",
+    "OrganizationUnits": "组织机构",
+    "AuditLogs": "审计日志",
+    "Notifications": "站内通知",
+    "DataDictionaries": "数据字典",
+    "Tenants": "多租户管理"
 }

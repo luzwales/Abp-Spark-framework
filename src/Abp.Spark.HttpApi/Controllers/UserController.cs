@@ -27,4 +27,13 @@ public class UserController : AbpControllerBase, IUserAppService
 
     [HttpGet]
     public Task<List<UserDto>> GetListAsync() => _userAppService.GetListAsync();
+
+    [HttpPost]
+    public Task<UserDto> CreateAsync([FromBody] CreateUserDto input) => _userAppService.CreateAsync(input);
+
+    [HttpPut("{id}")]
+    public Task<UserDto> UpdateAsync(Guid id, [FromBody] UpdateUserDto input) => _userAppService.UpdateAsync(id, input);
+
+    [HttpDelete("{id}")]
+    public Task DeleteAsync(Guid id) => _userAppService.DeleteAsync(id);
 }

@@ -30,5 +30,14 @@
     "welcome_title": "Build something beautiful",
     "welcome_desc": "Spark picks up where ASP.NET leaves off. Build production ready, full-stack web applications fast.",
     "view_docs": "View the documentation →",
-    "logged_in_msg": "You're logged in!"
+    "logged_in_msg": "You're logged in!",
+    "System": "System Management",
+    "Dashboard": "Dashboard",
+    "Users": "Users",
+    "Roles": "Roles & Permissions",
+    "OrganizationUnits": "Organization Units",
+    "AuditLogs": "Audit Logs",
+    "Notifications": "Notifications",
+    "DataDictionaries": "Data Dictionaries",
+    "Tenants": "Tenants"
 }
