@@ -3,6 +3,8 @@ using System.Text;
 using Abp.Spark.Domain.Menus;
 using Abp.Spark.Menus;
 using Abp.Spark.Users;
+using Lion.AbpPro.DataDictionaryManagement.DataDictionaries;
+using Lion.AbpPro.DataDictionaryManagement.DataDictionaries.Aggregates;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
@@ -17,6 +19,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
     private readonly IRepository<MenuConfig, Guid> _menuRepository;
     private readonly OrganizationUnitManager _organizationUnitManager;
     private readonly IOrganizationUnitRepository _organizationUnitRepository;
+    private readonly IDataDictionaryRepository _dataDictionaryRepository;
     private readonly IGuidGenerator _guidGenerator;
 
     public AbpSparkDataSeedContributor(
@@ -24,12 +27,14 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         IRepository<MenuConfig, Guid> menuRepository,
         OrganizationUnitManager organizationUnitManager,
         IOrganizationUnitRepository organizationUnitRepository,
+        IDataDictionaryRepository dataDictionaryRepository,
         IGuidGenerator guidGenerator)
     {
         _userRepository = userRepository;
         _menuRepository = menuRepository;
         _organizationUnitManager = organizationUnitManager;
         _organizationUnitRepository = organizationUnitRepository;
+        _dataDictionaryRepository = dataDictionaryRepository;
         _guidGenerator = guidGenerator;
     }
 
@@ -38,6 +43,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         await SeedUsersAsync();
         await SeedMenusAsync();
         await SeedOrganizationUnitsAsync();
+        await SeedDataDictionariesAsync();
     }
 
     private async Task SeedUsersAsync()
@@ -146,6 +152,45 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         qaOu.ExtraProperties["ManagerName"] = "Operator Li";
         qaOu.ExtraProperties["ManagerLevel"] = 1;
         await _organizationUnitManager.CreateAsync(qaOu);
+    }
+
+    private async Task SeedDataDictionariesAsync()
+    {
+        // 1. 工单状态字典 (WorkOrderStatus)
+        var orderStatus = await _dataDictionaryRepository.FindByCodeAsync("WorkOrderStatus");
+        if (orderStatus == null)
+        {
+            var dict = new DataDictionary(_guidGenerator.Create(), "WorkOrderStatus", "工单生产状态", "制造业工单流转全生命周期状态");
+            dict.AddDetail(_guidGenerator.Create(), "PENDING", "待下发", 1, "工单已创建等待排产调度");
+            dict.AddDetail(_guidGenerator.Create(), "IN_PROGRESS", "生产执行中", 2, "产线工位正在报工执行中");
+            dict.AddDetail(_guidGenerator.Create(), "QA_INSPECTING", "品检抽检中", 3, "质检员正在执行工序抽样检验");
+            dict.AddDetail(_guidGenerator.Create(), "COMPLETED", "已完工入库", 4, "已报工完工并入成品库");
+            dict.AddDetail(_guidGenerator.Create(), "CANCELLED", "已作废终止", 5, "因物料异常或计划变更作废", false);
+            await _dataDictionaryRepository.InsertAsync(dict);
+        }
+
+        // 2. 缺陷严重度等级 (DefectLevel)
+        var defectLevel = await _dataDictionaryRepository.FindByCodeAsync("DefectLevel");
+        if (defectLevel == null)
+        {
+            var dict = new DataDictionary(_guidGenerator.Create(), "DefectLevel", "质量缺陷等级", "产品QC巡检与CAPA质量事故等级分类");
+            dict.AddDetail(_guidGenerator.Create(), "CRITICAL", "致命缺陷 (Critical)", 1, "影响人身安全、法规合规或核心电气性能");
+            dict.AddDetail(_guidGenerator.Create(), "MAJOR", "严重缺陷 (Major)", 2, "导致功能降级或明显外观异常");
+            dict.AddDetail(_guidGenerator.Create(), "MINOR", "轻微缺陷 (Minor)", 3, "工艺毛刺、不影响功能的微小外观瑕疵");
+            await _dataDictionaryRepository.InsertAsync(dict);
+        }
+
+        // 3. 质检工序类型 (InspectionType)
+        var inspectionType = await _dataDictionaryRepository.FindByCodeAsync("InspectionType");
+        if (inspectionType == null)
+        {
+            var dict = new DataDictionary(_guidGenerator.Create(), "InspectionType", "检验工序类型", "质量控制各关键检验节点");
+            dict.AddDetail(_guidGenerator.Create(), "IQC", "来料进料检验 (IQC)", 1, "原材料入库验收抽样检查");
+            dict.AddDetail(_guidGenerator.Create(), "IPQC", "制程巡回检验 (IPQC)", 2, "生产车间巡检与首件检验");
+            dict.AddDetail(_guidGenerator.Create(), "FQC", "最终成品检验 (FQC)", 3, "总装下线最终检验");
+            dict.AddDetail(_guidGenerator.Create(), "OQC", "出货放行检验 (OQC)", 4, "打包出货前封箱复检");
+            await _dataDictionaryRepository.InsertAsync(dict);
+        }
     }
 
     private static string HashPassword(string password)
