@@ -12,8 +12,8 @@ public class UpdateSparkCommand
 {
     public void Execute()
     {
-        ConsoleOutput.StartAlert(new List<string>() { "Updating Spark Templates" });
-        Process.Start("dotnet", "new install Spark.Templates").WaitForExit();
-        ConsoleOutput.SuccessAlert(new List<string>() { "Spark Templates successfully updated" });
+        ConsoleOutput.StartAlert(new List<string>() { "Updating Abp.Spark Templates" });
+        Process.Start("dotnet", "new install Abp.Spark.Templates").WaitForExit();
+        ConsoleOutput.SuccessAlert(new List<string>() { "Abp.Spark Templates successfully updated" });
     }
 }

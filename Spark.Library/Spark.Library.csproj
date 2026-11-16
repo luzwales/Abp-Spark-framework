@@ -4,13 +4,13 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Title>Spark.NET Library</Title>
-	<PackageId>Spark.Library</PackageId>
-    <Authors>Weston Walker</Authors>
-    <Description>Spark.NET library containing the core code for Spark.</Description>
+    <Title>Abp.Spark.NET Library</Title>
+	<PackageId>Abp.Spark.Library</PackageId>
+    <Authors>Andrew Lu</Authors>
+    <Description>Abp.Spark framework library containing the core code for Spark with ABP support.</Description>
     <PackageProjectUrl>https://spark-framework.net/</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/spark-dotnet/framework</RepositoryUrl>
+    <RepositoryUrl>https://github.com/luzwales/Abp-Spark-framework</RepositoryUrl>
 	<PackageVersion>2.0.0</PackageVersion>
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	<PackageIcon>icon.png</PackageIcon>

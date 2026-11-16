@@ -7,13 +7,13 @@
 	<ToolCommandName>spark</ToolCommandName>
 	<PackageOutputPath>./nupkg</PackageOutputPath>
 	<PackageVersion>2.0.0</PackageVersion>
-	<PackageId>Spark.CLI</PackageId>
-	<Title>Spark.NET CLI</Title>
-	<Authors>Weston Walker</Authors>
-	<Description>CLI tool for creating and using Spark applications.</Description>
-	<PackageTags>cli;command;spark</PackageTags>
+	<PackageId>Abp.Spark.CLI</PackageId>
+	<Title>Abp.Spark.NET CLI</Title>
+	<Authors>Andrew Lu</Authors>
+	<Description>CLI tool for creating and using Abp.Spark applications.</Description>
+	<PackageTags>cli;command;spark;abp</PackageTags>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
-	<RepositoryUrl>https://github.com/spark-dotnet/framework</RepositoryUrl>
+	<RepositoryUrl>https://github.com/luzwales/Abp-Spark-framework</RepositoryUrl>
 	<PackageProjectUrl>https://spark-framework.net/</PackageProjectUrl>
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	<PackageIcon>icon.png</PackageIcon>

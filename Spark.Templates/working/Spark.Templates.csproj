@@ -4,14 +4,12 @@
     <PackageType>Template</PackageType>
     <PackageTags>Blazor, API, Templates, Framework, UI</PackageTags>
     <PackageVersion>2.0.0</PackageVersion>
-    <PackageId>Spark.Templates</PackageId>
-    <Title>Spark.NET Templates</Title>
-    <Authors>Weston Walker</Authors>
-    <Description>Templates for Spark.NET Web Framework.</Description>
-    <PackageTags>dotnet-new;templates</PackageTags>
-
+    <PackageId>Abp.Spark.Templates</PackageId>
+    <Title>Abp.Spark.NET Templates</Title>
+    <Authors>Andrew Lu</Authors>
+    <Description>Templates for Abp.Spark Web Framework.</Description>
+    <PackageTags>dotnet-new;templates;spark;abp</PackageTags>
     <TargetFramework>netstandard2.0</TargetFramework>
-
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <ContentTargetFolders>content</ContentTargetFolders>
@@ -19,7 +17,7 @@
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <PackageProjectUrl>https://spark-framework.net/</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/spark-dotnet/framework</RepositoryUrl>
+    <RepositoryUrl>https://github.com/luzwales/Abp-Spark-framework</RepositoryUrl>
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	<PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
