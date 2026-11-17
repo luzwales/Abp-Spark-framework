@@ -17,6 +17,11 @@ public class MenuAppService : ApplicationService, IMenuAppService
     public async Task<List<MenuDto>> GetUserMenusAsync()
     {
         var activeMenus = await _menuRepository.GetListAsync(m => m.IsActive);
+        if (CurrentUser.IsInRole("Admin") || CurrentUser.IsInRole("admin"))
+        {
+            return BuildTree(activeMenus);
+        }
+
         var authorizedMenus = new List<MenuConfig>();
 
         foreach (var item in activeMenus)
@@ -53,6 +58,7 @@ public class MenuAppService : ApplicationService, IMenuAppService
 
     public async Task<MenuDto> CreateAsync(CreateUpdateMenuDto input)
     {
+        await CheckPermissionAsync(Abp.Spark.Permissions.AbpSparkPermissions.Menus.Create);
         var menu = new MenuConfig(
             GuidGenerator.Create(),
             input.ParentId,
@@ -71,6 +77,7 @@ public class MenuAppService : ApplicationService, IMenuAppService
 
     public async Task<MenuDto> UpdateAsync(Guid id, CreateUpdateMenuDto input)
     {
+        await CheckPermissionAsync(Abp.Spark.Permissions.AbpSparkPermissions.Menus.Update);
         var menu = await _menuRepository.GetAsync(id);
         menu.ParentId = input.ParentId;
         menu.Name = input.Name;
@@ -88,12 +95,22 @@ public class MenuAppService : ApplicationService, IMenuAppService
 
     public async Task DeleteAsync(Guid id)
     {
+        await CheckPermissionAsync(Abp.Spark.Permissions.AbpSparkPermissions.Menus.Delete);
         var children = await _menuRepository.GetListAsync(m => m.ParentId == id);
         foreach (var child in children)
         {
             await _menuRepository.DeleteAsync(child, autoSave: false);
         }
         await _menuRepository.DeleteAsync(id, autoSave: true);
+    }
+
+    private async Task CheckPermissionAsync(string permissionName)
+    {
+        if (CurrentUser.IsInRole("Admin") || CurrentUser.IsInRole("admin"))
+        {
+            return;
+        }
+        await CheckPolicyAsync(permissionName);
     }
 
     private static List<MenuDto> BuildTree(List<MenuConfig> allMenus)

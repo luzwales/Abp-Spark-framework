@@ -1,4 +1,6 @@
 using Abp.Spark.Menus;
+using Abp.Spark.Permissions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Volo.Abp.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ namespace Abp.Spark.Controllers;
 [Tags("Menu")]
 [Route("api/menus")]
 [IgnoreAntiforgeryToken]
+[Authorize(AuthenticationSchemes = "Bearer,Identity.Application,Cookies")]
 public class MenuController : AbpControllerBase, IMenuAppService
 {
     private readonly IMenuAppService _menuAppService;
@@ -18,9 +21,11 @@ public class MenuController : AbpControllerBase, IMenuAppService
     }
 
     [HttpGet("user-menus")]
+    [AllowAnonymous]
     public Task<List<MenuDto>> GetUserMenusAsync() => _menuAppService.GetUserMenusAsync();
 
     [HttpGet("all")]
+    [AllowAnonymous]
     public Task<List<MenuDto>> GetAllAsync() => _menuAppService.GetAllAsync();
 
     [HttpGet("{id}")]

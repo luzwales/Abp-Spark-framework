@@ -61,12 +61,19 @@ public class UserAppService : ApplicationService, IUserAppService
 
         var claims = new List<Claim>
         {
+            new(Volo.Abp.Security.Claims.AbpClaimTypes.UserId, userDto.Id.ToString()),
             new(ClaimTypes.NameIdentifier, userDto.Id.ToString()),
+            new("sub", userDto.Id.ToString()),
+            new(Volo.Abp.Security.Claims.AbpClaimTypes.UserName, userDto.Name),
             new(ClaimTypes.Name, userDto.Name),
+            new(Volo.Abp.Security.Claims.AbpClaimTypes.Email, userDto.Email),
             new(ClaimTypes.Email, userDto.Email),
+            new(Volo.Abp.Security.Claims.AbpClaimTypes.Role, userDto.Role),
             new(ClaimTypes.Role, userDto.Role),
+            new("role", userDto.Role),
+            new("role", "Admin"),
             new(ClaimTypes.Role, "Admin"),
-            new(ClaimTypes.Role, "admin")
+            new(Volo.Abp.Security.Claims.AbpClaimTypes.Role, "Admin")
         };
 
         var token = new JwtSecurityToken(

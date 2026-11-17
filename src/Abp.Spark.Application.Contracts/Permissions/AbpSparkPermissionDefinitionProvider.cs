@@ -8,6 +8,20 @@ public class AbpSparkPermissionDefinitionProvider : PermissionDefinitionProvider
 {
     public override void Define(IPermissionDefinitionContext context)
     {
+        var sysGroup = context.AddGroup(
+            AbpSparkPermissions.SystemGroupName,
+            new FixedLocalizableString("系统与导航 (System & Menus)")
+        );
+
+        var menus = sysGroup.AddPermission(
+            AbpSparkPermissions.Menus.Default,
+            new FixedLocalizableString("菜单配置 (Menu Management)"),
+            multiTenancySide: MultiTenancySides.Both
+        );
+        menus.AddChild(AbpSparkPermissions.Menus.Create, new FixedLocalizableString("新增菜单 (Create)"), multiTenancySide: MultiTenancySides.Both);
+        menus.AddChild(AbpSparkPermissions.Menus.Update, new FixedLocalizableString("编辑菜单 (Update)"), multiTenancySide: MultiTenancySides.Both);
+        menus.AddChild(AbpSparkPermissions.Menus.Delete, new FixedLocalizableString("删除菜单 (Delete)"), multiTenancySide: MultiTenancySides.Both);
+
         var mfgGroup = context.AddGroup(
             AbpSparkPermissions.GroupName,
             new FixedLocalizableString("智能制造业务 (Manufacturing)")

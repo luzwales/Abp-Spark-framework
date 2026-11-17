@@ -230,7 +230,15 @@
                     <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">
                         绑定权限代码 (PermissionName)
                     </label>
-                    <input type="text" @bind="_form.PermissionName" placeholder="留空则登录可见，如 Spark.Menus 或 AbpIdentity.Users" class="input input-bordered input-sm w-full bg-transparent font-mono" />
+                    <input type="text" @bind="_form.PermissionName" placeholder="留空则登录可见，如 SparkSystem.Menus 或 AbpIdentity.Users" class="input input-bordered input-sm w-full bg-transparent font-mono" />
+                    <div class="mt-1.5 flex flex-wrap gap-1.5 items-center">
+                        <span class="text-[10px] text-[#888ea8]">快捷填入:</span>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "SparkSystem.Menus")">SparkSystem.Menus</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "AbpIdentity.Users")">AbpIdentity.Users</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "AbpIdentity.Roles")">AbpIdentity.Roles</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "AbpIdentity.AuditLogs")">AbpIdentity.AuditLogs</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "AbpTenantManagement.Tenants")">AbpTenantManagement.Tenants</button>
+                    </div>
                     <p class="text-[10px] text-[#888ea8] mt-1">
                         当用户/角色拥有该权限时才会在侧边栏渲染该项；留空表示所有已登录用户默认可见。
                     </p>

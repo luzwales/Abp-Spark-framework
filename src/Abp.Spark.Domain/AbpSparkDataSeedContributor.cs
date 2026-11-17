@@ -112,9 +112,19 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
                         icon: "Menu",
                         route: "/menus",
                         type: SidebarItemType.Link,
-                        sortOrder: 9
+                        sortOrder: 9,
+                        permissionName: "SparkSystem.Menus"
                     );
                     await _menuRepository.InsertAsync(menuManagement, autoSave: true);
+                }
+            }
+            else
+            {
+                var existing = existingMenus.FirstOrDefault(m => m.Name == "MenuManagement" || m.Route == "/menus");
+                if (existing != null && string.IsNullOrEmpty(existing.PermissionName))
+                {
+                    existing.PermissionName = "SparkSystem.Menus";
+                    await _menuRepository.UpdateAsync(existing, autoSave: true);
                 }
             }
             return;
@@ -171,7 +181,8 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
                 icon: item.icon,
                 route: item.route,
                 type: SidebarItemType.Link,
-                sortOrder: item.sortOrder
+                sortOrder: item.sortOrder,
+                permissionName: item.name == "MenuManagement" ? "SparkSystem.Menus" : null
             );
             await _menuRepository.InsertAsync(child, autoSave: false);
         }
@@ -364,8 +375,12 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
 
     private async Task SeedPermissionsAsync()
     {
-        var mfgPermissions = new[]
+        var allPermissions = new[]
         {
+            "SparkSystem.Menus",
+            "SparkSystem.Menus.Create",
+            "SparkSystem.Menus.Update",
+            "SparkSystem.Menus.Delete",
             "SparkManufacturing.Customers",
             "SparkManufacturing.Customers.Create",
             "SparkManufacturing.Customers.Update",
@@ -376,7 +391,7 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
         var roles = new[] { "Admin", "admin" };
         foreach (var role in roles)
         {
-            foreach (var p in mfgPermissions)
+            foreach (var p in allPermissions)
             {
                 if (!await _permissionGrantRepository.AnyAsync(x => x.Name == p && x.ProviderName == "R" && x.ProviderKey == role))
                 {
