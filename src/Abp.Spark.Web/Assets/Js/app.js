@@ -218,6 +218,33 @@
     // 立即执行深色模式防 FOUC
     ThemeManager.applyTheme(ThemeManager.getStoredTheme());
 
+    // MutationObserver 哨兵：锁定深色模式，杜绝任何外部或 DOM Diff 误抹除
+    try {
+        let isReverting = false;
+        const observer = new MutationObserver((mutations) => {
+            if (isReverting) return;
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && (mutation.attributeName === 'class' || mutation.attributeName === 'data-theme')) {
+                    const expectedTheme = ThemeManager.getStoredTheme();
+                    const shouldBeDark = expectedTheme === 'dark' || (expectedTheme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    const html = document.documentElement;
+                    if (shouldBeDark && !html.classList.contains('dark')) {
+                        isReverting = true;
+                        html.classList.add('dark');
+                        html.setAttribute('data-theme', 'vristo-dark');
+                        isReverting = false;
+                    } else if (!shouldBeDark && html.classList.contains('dark')) {
+                        isReverting = true;
+                        html.classList.remove('dark');
+                        html.setAttribute('data-theme', 'vristo-light');
+                        isReverting = false;
+                    }
+                }
+            }
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+    } catch (e) {}
+
     window.themeManager = ThemeManager;
     window.sidebarAccordion = SidebarAccordion;
 

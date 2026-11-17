@@ -1,7 +1,15 @@
 @inherits LayoutComponentBase
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    var reqTheme = HttpContextAccessor.HttpContext?.Request.Cookies["spark_theme"];
+    var isDark = reqTheme == "dark";
+    var themeClass = isDark ? "dark" : "";
+    var themeAttr = isDark ? "vristo-dark" : "vristo-light";
+}
 
 <!DOCTYPE html>
-<html lang="en" data-theme="vristo-light">
+<html lang="en" class="@themeClass" data-theme="@themeAttr">
 
 <head>
     <meta charset="utf-8" />
