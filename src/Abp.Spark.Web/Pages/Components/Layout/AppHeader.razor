@@ -1,3 +1,5 @@
+@inject NavigationManager NavigationManager
+
 @code {
     [Parameter] public EventCallback OnToggleSidebar { get; set; }
     [CascadingParameter] public PageState PageState { get; set; } = default!;
@@ -86,7 +88,7 @@
                         <path d="m22 22-5-10-5 10"/>
                         <path d="M14 18h6"/>
                     </svg>
-                    <span class="current-lang-text text-xs font-bold uppercase tracking-wide">ZH</span>
+                    <span class="current-lang-text text-xs font-bold uppercase tracking-wide">@(L.CurrentCulture.ToUpper())</span>
                     <!-- Lucide: ChevronDown -->
                     <svg class="w-3 h-3 text-[#888ea8] opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m6 9 6 6 6-6"/>
@@ -94,22 +96,20 @@
                 </summary>
                 <ul class="dropdown-content z-50 menu p-1.5 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)] bg-white dark:bg-[#0e1726] rounded-xl w-36 text-xs text-[#0e1726] dark:text-white mt-2 space-y-1">
                     <li>
-                        <button type="button"
-                                id="lang-item-zh"
-                                class="flex items-center justify-between py-2 px-3 hover:bg-primary/10 hover:text-primary rounded-lg cursor-pointer transition font-medium"
-                                onclick="window.themeManager?.setLanguage('zh')">
+                        <a href="/change-language?culture=zh&returnUrl=@(NavigationManager.ToBaseRelativePath(NavigationManager.Uri) == "" ? "/" : "/" + NavigationManager.ToBaseRelativePath(NavigationManager.Uri))"
+                           id="lang-item-zh"
+                           class="flex items-center justify-between py-2 px-3 hover:bg-primary/10 hover:text-primary rounded-lg transition font-medium @(L.CurrentCulture == "zh" ? "bg-primary/10 text-primary font-bold" : "")">
                             <span>@L["zh"]</span>
                             <span class="text-[10px] font-bold">ZH</span>
-                        </button>
+                        </a>
                     </li>
                     <li>
-                        <button type="button"
-                                id="lang-item-en"
-                                class="flex items-center justify-between py-2 px-3 hover:bg-primary/10 hover:text-primary rounded-lg cursor-pointer transition font-medium"
-                                onclick="window.themeManager?.setLanguage('en')">
+                        <a href="/change-language?culture=en&returnUrl=@(NavigationManager.ToBaseRelativePath(NavigationManager.Uri) == "" ? "/" : "/" + NavigationManager.ToBaseRelativePath(NavigationManager.Uri))"
+                           id="lang-item-en"
+                           class="flex items-center justify-between py-2 px-3 hover:bg-primary/10 hover:text-primary rounded-lg transition font-medium @(L.CurrentCulture == "en" ? "bg-primary/10 text-primary font-bold" : "")">
                             <span>@L["en"]</span>
                             <span class="text-[10px] font-bold">EN</span>
-                        </button>
+                        </a>
                     </li>
                 </ul>
             </details>

@@ -1,5 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -9,10 +13,14 @@ namespace Abp.Spark.Users;
 public class UserAppService : ApplicationService, IUserAppService
 {
     private readonly IRepository<AppUser, Guid> _userRepository;
+    private readonly IConfiguration _configuration;
 
-    public UserAppService(IRepository<AppUser, Guid> userRepository)
+    public UserAppService(
+        IRepository<AppUser, Guid> userRepository,
+        IConfiguration configuration)
     {
         _userRepository = userRepository;
+        _configuration = configuration;
     }
 
     public async Task<UserDto> GetCurrentAsync()
@@ -37,6 +45,48 @@ public class UserAppService : ApplicationService, IUserAppService
             throw new UserFriendlyException("账号或密码错误");
         }
         return ObjectMapper.Map<AppUser, UserDto>(user);
+    }
+
+    public async Task<LoginResultDto> LoginJwtAsync(LoginInputDto input)
+    {
+        var userDto = await LoginAsync(input);
+
+        var issuer = _configuration["Jwt:Issuer"] ?? "Abp.Spark";
+        var audience = _configuration["Jwt:Audience"] ?? "Abp.Spark.Client";
+        var securityKey = _configuration["Jwt:SecurityKey"] ?? "AbpSparkFrameworkSecretKeyForJwtAuthentication2026!@";
+        var expireMinutes = _configuration.GetValue<int>("Jwt:ExpireMinutes", 1440);
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userDto.Id.ToString()),
+            new(ClaimTypes.Name, userDto.Name),
+            new(ClaimTypes.Email, userDto.Email),
+            new(ClaimTypes.Role, userDto.Role),
+            new(ClaimTypes.Role, "Admin"),
+            new(ClaimTypes.Role, "admin")
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(expireMinutes),
+            signingCredentials: creds
+        );
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var jwtString = tokenHandler.WriteToken(token);
+
+        return new LoginResultDto
+        {
+            AccessToken = jwtString,
+            TokenType = "Bearer",
+            ExpiresIn = expireMinutes * 60,
+            User = userDto
+        };
     }
 
     public async Task<UserDto> RegisterAsync(CreateUserDto input)

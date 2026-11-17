@@ -39,5 +39,8 @@
     "AuditLogs": "审计日志",
     "Notifications": "站内通知",
     "DataDictionaries": "数据字典",
-    "Tenants": "多租户管理"
+    "Tenants": "多租户管理",
+    "Languages": "多语言管理",
+    "Manufacturing": "制造业务",
+    "Customers": "客户档案"
 }

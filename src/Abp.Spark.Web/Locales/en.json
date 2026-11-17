@@ -39,5 +39,8 @@
     "AuditLogs": "Audit Logs",
     "Notifications": "Notifications",
     "DataDictionaries": "Data Dictionaries",
-    "Tenants": "Tenants"
+    "Tenants": "Tenants",
+    "Languages": "Languages",
+    "Manufacturing": "Manufacturing",
+    "Customers": "Customers"
 }

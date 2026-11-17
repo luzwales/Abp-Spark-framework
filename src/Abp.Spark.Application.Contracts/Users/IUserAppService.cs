@@ -6,6 +6,7 @@ public interface IUserAppService : IApplicationService
 {
     Task<UserDto> GetCurrentAsync();
     Task<UserDto> LoginAsync(LoginInputDto input);
+    Task<LoginResultDto> LoginJwtAsync(LoginInputDto input);
     Task<UserDto> RegisterAsync(CreateUserDto input);
     Task<List<UserDto>> GetListAsync();
     Task<UserDto> CreateAsync(CreateUserDto input);
@@ -44,4 +45,12 @@ public class LoginInputDto
 {
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+}
+
+public class LoginResultDto
+{
+    public string AccessToken { get; set; } = string.Empty;
+    public string TokenType { get; set; } = "Bearer";
+    public int ExpiresIn { get; set; }
+    public UserDto User { get; set; } = default!;
 }

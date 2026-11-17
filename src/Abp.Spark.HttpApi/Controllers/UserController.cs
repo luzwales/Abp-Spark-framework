@@ -21,7 +21,14 @@ public class UserController : AbpControllerBase, IUserAppService
     public Task<UserDto> GetCurrentAsync() => _userAppService.GetCurrentAsync();
 
     [HttpPost("login")]
-    public Task<UserDto> LoginAsync([FromBody] LoginInputDto input) => _userAppService.LoginAsync(input);
+    public async Task<UserDto> LoginAsync([FromBody] LoginInputDto input)
+    {
+        var res = await _userAppService.LoginJwtAsync(input);
+        return res.User;
+    }
+
+    [HttpPost("token")]
+    public Task<LoginResultDto> LoginJwtAsync([FromBody] LoginInputDto input) => _userAppService.LoginJwtAsync(input);
 
     [HttpPost("register")]
     public Task<UserDto> RegisterAsync([FromBody] CreateUserDto input) => _userAppService.RegisterAsync(input);
