@@ -112,33 +112,37 @@
                     }
                     else if (menu.Type == SidebarItemType.Group)
                     {
-                        <div>
-                            <!-- 分组标题可点击展开/收起 -->
+                        <div class="sidebar-group-item">
+                            <!-- 分组标题（手风琴模式互斥折叠） -->
                             <button type="button"
-                                    class="w-full flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-[#888ea8] dark:text-[#506690] px-3 py-1.5 hover:text-primary transition-colors cursor-pointer"
-                                    onclick="@(() => ToggleGroup(menu.Id))">
+                                    class="w-full flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-[#888ea8] dark:text-[#506690] px-3 py-2 rounded-lg hover:text-primary hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] transition-all cursor-pointer select-none"
+                                    onclick="window.sidebarAccordion?.toggle('@menu.Id')">
                                 <span class="flex items-center gap-2">
                                     <LucideIcon Name="@(menu.Icon ?? "Folder")" Class="w-3.5 h-3.5" />
                                     <span>@(L[menu.Label])</span>
                                 </span>
-                                <LucideIcon Name="@(_expandedGroups.Contains(menu.Id) ? "ChevronDown" : "ChevronRight")" Class="w-3.5 h-3.5" />
+                                <svg class="sidebar-group-chevron w-3.5 h-3.5 transition-transform duration-200" id="group-chevron-@menu.Id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m9 18 6-6-6-6"/>
+                                </svg>
                             </button>
 
-                            @if (_expandedGroups.Contains(menu.Id) && menu.Children.Any())
-                            {
-                                <ul class="space-y-1 text-sm font-semibold mt-1 pl-2">
-                                    @foreach (var child in menu.Children)
-                                    {
-                                        <li>
-                                            <a href="@child.Route"
-                                               class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors @(IsActive(child.Route) ? "bg-primary text-white shadow-sm" : "text-[#506690] dark:text-[#888ea8] hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] hover:text-primary dark:hover:text-white")">
-                                                <LucideIcon Name="@(child.Icon ?? "Circle")" Class="w-4 h-4 shrink-0" />
-                                                <span class="text-xs">@(L[child.Label])</span>
-                                            </a>
-                                        </li>
-                                    }
-                                </ul>
-                            }
+                            <div class="sidebar-group-children space-y-1 mt-1 pl-2 transition-all duration-300" id="group-container-@menu.Id" data-group-id="@menu.Id">
+                                @if (menu.Children.Any())
+                                {
+                                    <ul class="space-y-1 text-sm font-semibold">
+                                        @foreach (var child in menu.Children)
+                                        {
+                                            <li>
+                                                <a href="@child.Route"
+                                                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors @(IsActive(child.Route) ? "bg-primary text-white shadow-sm font-bold" : "text-[#506690] dark:text-[#888ea8] hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] hover:text-primary dark:hover:text-white")">
+                                                    <LucideIcon Name="@(child.Icon ?? "Circle")" Class="w-4 h-4 shrink-0" />
+                                                    <span class="text-xs">@(L[child.Label])</span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
                         </div>
                     }
                 }

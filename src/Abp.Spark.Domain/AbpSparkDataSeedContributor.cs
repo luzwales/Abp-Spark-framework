@@ -96,8 +96,27 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
 
     private async Task SeedMenusAsync()
     {
-        if (await _menuRepository.GetCountAsync() > 0)
+        var existingMenus = await _menuRepository.GetListAsync();
+        if (existingMenus.Any())
         {
+            if (!existingMenus.Any(m => m.Name == "MenuManagement" || m.Route == "/menus"))
+            {
+                var systemGroup = existingMenus.FirstOrDefault(m => m.Name == "SystemManagement" && m.Type == SidebarItemType.Group);
+                if (systemGroup != null)
+                {
+                    var menuManagement = new MenuConfig(
+                        _guidGenerator.Create(),
+                        parentId: systemGroup.Id,
+                        name: "MenuManagement",
+                        label: "Menus",
+                        icon: "Menu",
+                        route: "/menus",
+                        type: SidebarItemType.Link,
+                        sortOrder: 9
+                    );
+                    await _menuRepository.InsertAsync(menuManagement, autoSave: true);
+                }
+            }
             return;
         }
 
@@ -138,7 +157,8 @@ public class AbpSparkDataSeedContributor : IDataSeedContributor, ITransientDepen
             ("NotificationManagement", "Notifications", "Bell", "/notifications", 5),
             ("DataDictionaryManagement", "DataDictionaries", "BookOpen", "/data-dictionaries", 6),
             ("TenantManagement", "Tenants", "Building", "/tenants", 7),
-            ("LanguageManagement", "Languages", "Languages", "/languages", 8)
+            ("LanguageManagement", "Languages", "Languages", "/languages", 8),
+            ("MenuManagement", "Menus", "Menu", "/menus", 9)
         };
 
         foreach (var item in subMenus)

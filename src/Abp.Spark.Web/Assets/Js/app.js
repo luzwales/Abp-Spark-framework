@@ -1,17 +1,23 @@
-// Vristo theme & layout helper for Blazor with Morphicons & Lucide
-import { createMorph } from 'morphicons/dom';
-import { Sun, Moon } from 'lucide';
-
+// Vristo Theme & Sidebar Accordion Layout Controller
 (function () {
+    function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? decodeURIComponent(match[2]) : null;
+    }
+
     const ThemeManager = {
-        morph: null,
         getStoredTheme() {
-            return localStorage.getItem('spark_theme') || 'system';
+            return localStorage.getItem('spark_theme') || getCookie('spark_theme') || 'system';
         },
         setTheme(theme) {
             localStorage.setItem('spark_theme', theme);
+            document.cookie = `spark_theme=${theme};path=/;max-age=31536000;SameSite=Lax`;
             this.applyTheme(theme);
             this.updateCustomizerActiveState();
+        },
+        toggleTheme() {
+            const currentIsDark = document.documentElement.classList.contains('dark');
+            this.setTheme(currentIsDark ? 'light' : 'dark');
         },
         applyTheme(theme) {
             const html = document.documentElement;
@@ -31,44 +37,15 @@ import { Sun, Moon } from 'lucide';
                 html.classList.remove('dark');
                 html.setAttribute('data-theme', 'vristo-light');
             }
-            this.updateThemeMorph(isDark);
-        },
-        initThemeMorph() {
-            const pathEl = document.getElementById('theme-morph-path');
-            if (!pathEl) return;
-            const isDark = document.documentElement.classList.contains('dark');
-            const targetIcon = isDark ? Sun : Moon;
-            if (!this.morph) {
-                this.morph = createMorph(pathEl, targetIcon, { strokeWidth: 2, spring: 'snappy' });
-            } else {
-                this.morph.set(targetIcon);
-            }
-        },
-        updateThemeMorph(isDark) {
-            const pathEl = document.getElementById('theme-morph-path');
-            if (!pathEl) return;
-            const targetIcon = isDark ? Sun : Moon;
-            if (!this.morph) {
-                this.morph = createMorph(pathEl, targetIcon, { strokeWidth: 2, spring: 'snappy' });
-            } else {
-                this.morph.morphTo(targetIcon);
-            }
         },
         getStoredLanguage() {
-            return localStorage.getItem('spark_locale') || 'zh';
+            return localStorage.getItem('spark_locale') || getCookie('spark_locale') || 'zh';
         },
         setLanguage(lang) {
             localStorage.setItem('spark_locale', lang);
             document.cookie = `spark_locale=${lang};path=/;max-age=31536000;SameSite=Lax`;
-            this.updateLanguageUI(lang);
-            const dd = document.getElementById('lang-dropdown');
-            if (dd) {
-                dd.removeAttribute('open');
-            }
-            if (document.activeElement && typeof document.activeElement.blur === 'function') {
-                document.activeElement.blur();
-            }
-            window.location.reload();
+            const currentUrl = window.location.pathname + window.location.search;
+            window.location.href = `/change-language?culture=${lang}&returnUrl=${encodeURIComponent(currentUrl)}`;
         },
         updateLanguageUI(lang) {
             const current = (lang || this.getStoredLanguage()).toLowerCase();
@@ -161,27 +138,90 @@ import { Sun, Moon } from 'lucide';
             onScroll();
         },
         initLayout() {
-            // Restore desktop sidebar collapsed state
+            // 恢复侧边栏折叠状态
             if (window.innerWidth >= 1024 && localStorage.getItem('spark_sidebar_collapsed') === 'true') {
                 document.body.classList.add('toggle-sidebar');
             }
-            // Restore navbar type
+            // 恢复导航栏模式
             if (localStorage.getItem('spark_navbar') === 'static') {
                 const header = document.querySelector('header');
                 if (header) header.classList.remove('sticky', 'top-0');
             }
             this.initScroll();
-            this.initThemeMorph();
             this.updateLanguageUI();
             this.updateCustomizerActiveState();
         }
     };
 
-    // Apply stored theme immediately on parse to prevent FOUC
+    // Sidebar 手风琴折叠控制器 (Accordion Mode)
+    const SidebarAccordion = {
+        toggle(id) {
+            const targetContainer = document.getElementById('group-container-' + id);
+            const targetChevron = document.getElementById('group-chevron-' + id);
+            if (!targetContainer) return;
+
+            const isCurrentlyOpen = !targetContainer.classList.contains('hidden');
+
+            // 手风琴模式：折叠其他所有分组
+            document.querySelectorAll('.sidebar-group-children').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.querySelectorAll('.sidebar-group-chevron').forEach(el => {
+                el.classList.remove('rotate-90');
+            });
+
+            // 切换当前分组
+            if (!isCurrentlyOpen) {
+                targetContainer.classList.remove('hidden');
+                if (targetChevron) targetChevron.classList.add('rotate-90');
+            }
+        },
+        init() {
+            const currentPath = window.location.pathname.toLowerCase();
+            let matchedGroupId = null;
+
+            document.querySelectorAll('.sidebar-group-children').forEach(groupEl => {
+                const links = groupEl.querySelectorAll('a');
+                links.forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href !== '/' && currentPath.startsWith(href.toLowerCase())) {
+                        matchedGroupId = groupEl.getAttribute('data-group-id');
+                    }
+                });
+            });
+
+            // 默认收起全部，仅展开匹配当前路由的分组；若无匹配则展开第一个分组
+            const allGroups = document.querySelectorAll('.sidebar-group-children');
+            if (allGroups.length > 0) {
+                allGroups.forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.sidebar-group-chevron').forEach(el => el.classList.remove('rotate-90'));
+
+                const targetId = matchedGroupId || allGroups[0].getAttribute('data-group-id');
+                if (targetId) {
+                    const targetEl = document.getElementById('group-container-' + targetId);
+                    const targetChev = document.getElementById('group-chevron-' + targetId);
+                    if (targetEl) targetEl.classList.remove('hidden');
+                    if (targetChev) targetChev.classList.add('rotate-90');
+                }
+            }
+        }
+    };
+
+    // 立即执行深色模式防 FOUC
     ThemeManager.applyTheme(ThemeManager.getStoredTheme());
 
     window.themeManager = ThemeManager;
-    document.addEventListener('DOMContentLoaded', () => {
+    window.sidebarAccordion = SidebarAccordion;
+
+    function refreshSystemState() {
+        // 关键：在 Blazor 切换路由后强力保持当前主题，杜绝回退到 light 模式
+        ThemeManager.applyTheme(ThemeManager.getStoredTheme());
         ThemeManager.initLayout();
-    });
+        SidebarAccordion.init();
+    }
+
+    document.addEventListener('DOMContentLoaded', refreshSystemState);
+    // 监听 Blazor 增强页面跳转事件 (Enhanced Navigation)
+    document.addEventListener('blazor:enhancedload', refreshSystemState);
+    window.addEventListener('popstate', refreshSystemState);
 })();

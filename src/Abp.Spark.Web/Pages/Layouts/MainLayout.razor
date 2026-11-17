@@ -14,7 +14,9 @@
     <script>
         (function() {
             try {
-                var theme = localStorage.getItem('spark_theme') || 'system';
+                var m = document.cookie.match(/(^| )spark_theme=([^;]+)/);
+                var cookieTheme = m ? decodeURIComponent(m[2]) : null;
+                var theme = localStorage.getItem('spark_theme') || cookieTheme || 'system';
                 var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 if (isDark) {
                     document.documentElement.classList.add('dark');

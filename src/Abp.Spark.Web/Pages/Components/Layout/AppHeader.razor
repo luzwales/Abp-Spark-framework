@@ -64,13 +64,26 @@
 
         <!-- Right Action Items -->
         <div class="flex items-center gap-2 sm:gap-3">
-            <!-- Animated Theme Morph Switcher (Lucide Sun <-> Moon via Morphicons) -->
+            <!-- Theme Switcher (Dual Lucide Sun / Moon SVG with seamless CSS state) -->
             <button type="button"
                     class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-[#191e3a] text-[#0e1726] dark:text-warning transition focus:outline-none cursor-pointer"
-                    onclick="window.themeManager?.setTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark')"
+                    onclick="window.themeManager?.toggleTheme()"
                     title="Toggle Dark / Light Mode">
-                <svg class="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path id="theme-morph-path" />
+                <!-- Sun Icon (Shown in Dark Mode) -->
+                <svg class="w-5 h-5 hidden dark:block text-warning fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="m4.93 4.93 1.41 1.41" />
+                    <path d="m17.66 17.66 1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="m6.34 17.66-1.41 1.41" />
+                    <path d="m19.07 4.93-1.41 1.41" />
+                </svg>
+                <!-- Moon Icon (Shown in Light Mode) -->
+                <svg class="w-5 h-5 block dark:hidden text-[#0e1726] fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
                 </svg>
             </button>
 
