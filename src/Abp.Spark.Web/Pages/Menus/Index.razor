@@ -1,4 +1,5 @@
 @page "/menus"
+@rendermode InteractiveServer
 @attribute [Authorize]
 @inject IMenuAppService MenuAppService
 @inject NavigationManager NavigationManager
@@ -25,7 +26,7 @@
         <div class="flex items-center gap-2">
             <button type="button"
                     class="btn btn-primary btn-sm flex items-center gap-2 shadow-sm font-bold text-xs"
-                    onclick="@(() => OpenModal(null))">
+                    @onclick="() => OpenModal(null)">
                 <LucideIcon Name="FolderPlus" Class="w-4 h-4 text-white" />
                 <span>+ 新增菜单 / 分组</span>
             </button>
@@ -141,12 +142,12 @@
                                     <div class="flex items-center justify-end gap-2">
                                         <button type="button"
                                                 class="px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-[#191e3a] text-primary transition font-semibold"
-                                                onclick="@(() => OpenModal(item.Dto))">
+                                                @onclick="() => OpenModal(item.Dto)">
                                             编辑
                                         </button>
                                         <button type="button"
                                                 class="px-2 py-1 rounded hover:bg-danger/10 text-danger transition font-semibold"
-                                                onclick="@(() => DeleteMenu(item.Dto.Id))">
+                                                @onclick="() => DeleteMenu(item.Dto.Id)">
                                             删除
                                         </button>
                                     </div>
@@ -170,7 +171,7 @@
                     <LucideIcon Name="@(_editingId.HasValue ? "SquarePen" : "PlusCircle")" Class="w-5 h-5 text-primary" />
                     <span>@(_editingId.HasValue ? "编辑菜单配置" : "新建菜单项 / 分组")</span>
                 </h3>
-                <button type="button" class="text-[#888ea8] hover:text-[#0e1726] dark:hover:text-white" onclick="@CloseModal">
+                <button type="button" class="text-[#888ea8] hover:text-[#0e1726] dark:hover:text-white" @onclick="CloseModal">
                     ✕
                 </button>
             </div>
@@ -233,11 +234,11 @@
                     <input type="text" @bind="_form.PermissionName" placeholder="留空则登录可见，如 SparkSystem.Menus 或 AbpIdentity.Users" class="input input-bordered input-sm w-full bg-transparent font-mono" />
                     <div class="mt-1.5 flex flex-wrap gap-1.5 items-center">
                         <span class="text-[10px] text-[#888ea8]">快捷填入:</span>
-                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "SparkSystem.Menus")">SparkSystem.Menus</button>
-                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "AbpIdentity.Users")">AbpIdentity.Users</button>
-                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "AbpIdentity.Roles")">AbpIdentity.Roles</button>
-                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "AbpIdentity.AuditLogs")">AbpIdentity.AuditLogs</button>
-                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" onclick="@(() => _form.PermissionName = "AbpTenantManagement.Tenants")">AbpTenantManagement.Tenants</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "SparkSystem.Menus"'>SparkSystem.Menus</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpIdentity.Users"'>AbpIdentity.Users</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpIdentity.Roles"'>AbpIdentity.Roles</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpIdentity.AuditLogs"'>AbpIdentity.AuditLogs</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpTenantManagement.Tenants"'>AbpTenantManagement.Tenants</button>
                     </div>
                     <p class="text-[10px] text-[#888ea8] mt-1">
                         当用户/角色拥有该权限时才会在侧边栏渲染该项；留空表示所有已登录用户默认可见。
@@ -259,8 +260,8 @@
             </div>
 
             <div class="px-6 py-4 bg-gray-50 dark:bg-[#121e32]/60 border-t border-gray-100 dark:border-[#191e3a] flex items-center justify-end gap-3">
-                <button type="button" class="btn btn-ghost btn-sm text-xs" onclick="@CloseModal">取消</button>
-                <button type="button" class="btn btn-primary btn-sm text-xs font-bold" onclick="@SaveMenu">保存并生效</button>
+                <button type="button" class="btn btn-ghost btn-sm text-xs" @onclick="CloseModal">取消</button>
+                <button type="button" class="btn btn-primary btn-sm text-xs font-bold" @onclick="SaveMenu">保存并生效</button>
             </div>
         </div>
     </div>

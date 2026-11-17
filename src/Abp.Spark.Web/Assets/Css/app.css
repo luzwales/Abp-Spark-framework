@@ -7,25 +7,60 @@
 @layer base {
     html {
         font-family: 'Nunito', sans-serif;
+        scrollbar-gutter: stable;
     }
 
     body {
-        @apply bg-[#fafafa] dark:bg-[#060818] text-[#0e1726] dark:text-[#888ea8] min-h-screen antialiased;
+        @apply bg-[#fafafa] dark:bg-[#060818] text-[#0e1726] dark:text-[#888ea8] h-screen overflow-hidden antialiased;
+    }
+
+    /* 现代平滑滚动条：默认透明隐藏，仅 hover 或滑动时显现，避免布局跳动 */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+        transition: scrollbar-color 0.25s ease-in-out;
+    }
+
+    *:hover {
+        scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+    }
+
+    .dark *:hover {
+        scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
     }
 
     ::-webkit-scrollbar {
-        width: 5px;
-        height: 5px;
+        width: 6px;
+        height: 6px;
+        background: transparent;
     }
+
     ::-webkit-scrollbar-track {
         background: transparent;
     }
+
     ::-webkit-scrollbar-thumb {
-        background: rgba(14, 23, 38, 0.2);
+        background: transparent;
         border-radius: 9999px;
+        transition: background-color 0.25s ease-in-out;
     }
-    .dark ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.15);
+
+    *:hover::-webkit-scrollbar-thumb,
+    div:hover::-webkit-scrollbar-thumb,
+    main:hover::-webkit-scrollbar-thumb,
+    .main-content-scroll:hover::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.4);
+    }
+
+    .dark *:hover::-webkit-scrollbar-thumb,
+    .dark div:hover::-webkit-scrollbar-thumb,
+    .dark main:hover::-webkit-scrollbar-thumb,
+    .dark .main-content-scroll:hover::-webkit-scrollbar-thumb {
+        background: rgba(100, 116, 139, 0.4);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #4361ee !important;
     }
 }
 
@@ -56,84 +91,92 @@
     color: white;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred.";
-    }
+.blazor-error-boundary::after {
+    content: "An error has occurred.";
+}
 
-    /* Vristo Layout & Sidebar Transitions (Borderless, Shadow-driven) */
+/* Vristo Layout & Sidebar Transitions (Borderless, Shadow-driven) */
+.app-sidebar {
+    @apply fixed top-0 bottom-0 left-0 z-50 w-[260px] bg-white dark:bg-[#0e1726] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] dark:shadow-[0_0_25px_0_rgba(0,0,0,0.3)] transition-all duration-300;
+    transform: translateX(-100%);
+}
+
+@screen lg {
     .app-sidebar {
-        @apply fixed top-0 bottom-0 left-0 z-50 w-[260px] bg-white dark:bg-[#0e1726] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] dark:shadow-[0_0_25px_0_rgba(0,0,0,0.3)] transition-all duration-300;
-        transform: translateX(-100%);
-    }
-
-    @screen lg {
-        .app-sidebar {
-            transform: translateX(0);
-        }
-    }
-
-    body.toggle-sidebar .app-sidebar {
         transform: translateX(0);
     }
+}
 
-    @screen lg {
-        body.toggle-sidebar .app-sidebar {
-            transform: translateX(-100%);
-        }
+body.toggle-sidebar .app-sidebar {
+    transform: translateX(0);
+}
+
+@screen lg {
+    body.toggle-sidebar .app-sidebar {
+        transform: translateX(-100%);
     }
+}
 
+/* .main-container-content 固定整屏视口高度，禁止外层滚动 */
+.main-container-content {
+    @apply h-screen max-h-screen overflow-hidden flex flex-col flex-1 transition-all duration-300;
+}
+
+@screen lg {
     .main-container-content {
-        @apply min-h-screen flex flex-col flex-1 transition-all duration-300;
+        margin-left: 260px;
     }
-
-    @screen lg {
-        .main-container-content {
-            margin-left: 260px;
-        }
-        body.toggle-sidebar .main-container-content {
-            margin-left: 0;
-        }
+    body.toggle-sidebar .main-container-content {
+        margin-left: 0;
     }
+}
 
-    /* Header logo: shown on mobile, hidden on desktop when sidebar open, shown on desktop when sidebar collapsed */
-    .header-logo {
-        display: flex;
-    }
+/* 内部滚动区域：承载页面内容滚动与自适应滚动条 */
+.main-content-scroll {
+    @apply flex-1 overflow-y-auto overflow-x-hidden flex flex-col;
+}
 
-    @screen lg {
-        .header-logo {
-            display: none;
-        }
-        body.toggle-sidebar .header-logo {
-            display: flex;
-        }
-    }
+/* Header Brand Box (Logo + Toggle Button): 宽度固定为 260px，与 Sidebar 完全一致 */
+.header-brand-box {
+    display: flex;
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+}
 
-    /* Header collapse button: shown on mobile, hidden on desktop when sidebar open, shown on desktop when sidebar collapsed */
-    .header-collapse-btn {
-        display: flex;
-    }
-
-    @screen lg {
-        .header-collapse-btn {
-            display: none;
-        }
-        body.toggle-sidebar .header-collapse-btn {
-            display: flex;
-        }
-    }
-
-    /* Sidebar overlay on mobile */
-    .sidebar-overlay {
+@screen lg {
+    .header-brand-box {
         display: none;
     }
+    body.toggle-sidebar .header-brand-box {
+        display: flex;
+    }
+}
 
+.header-search-box {
+    margin-left: 0.5rem;
+}
+
+@screen lg {
+    .header-search-box {
+        margin-left: 1.5rem;
+    }
+    body.toggle-sidebar .header-search-box {
+        margin-left: 0.5rem;
+    }
+}
+
+/* Sidebar overlay on mobile */
+.sidebar-overlay {
+    display: none;
+}
+
+body.toggle-sidebar .sidebar-overlay {
+    display: block;
+}
+
+@screen lg {
     body.toggle-sidebar .sidebar-overlay {
-        display: block;
+        display: none !important;
     }
-
-    @screen lg {
-        body.toggle-sidebar .sidebar-overlay {
-            display: none !important;
-        }
-    }
+}

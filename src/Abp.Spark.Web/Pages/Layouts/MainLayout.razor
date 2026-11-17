@@ -39,18 +39,22 @@
         <!-- Sidebar Navigation -->
         <AppSidebar />
 
-        <!-- Main Content Wrapper (Class-driven margin transition) -->
+        <!-- Main Content Wrapper (Fixed Screen, Overflow Hidden, No Outer Scrollbar) -->
         <div class="main-container-content">
-            <!-- Top Header (Height 60px, matches Sidebar logo area) -->
-            <AppHeader />
+            <!-- Top Header (Height 60px, Fixed at Top) -->
+            <header class="shrink-0 z-30">
+                <AppHeader />
+            </header>
 
-            <!-- Page Body Area -->
-            <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-                @Body
-            </main>
+            <!-- Page Body Area (Internal Smooth Scroll with Floating Auto-Hide Scrollbar) -->
+            <div class="main-content-scroll">
+                <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+                    @Body
+                </main>
 
-            <!-- Bottom Footer -->
-            <AppFooter />
+                <!-- Bottom Footer (Scrolls at Bottom of Content) -->
+                <AppFooter />
+            </div>
         </div>
 
         <!-- Back to Top Floating Action -->

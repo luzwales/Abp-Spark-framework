@@ -82,8 +82,9 @@ public class AbpSparkWebModule : AbpModule
             };
         });
 
-        // 3. 注册 Blazor 服务端渲染与 Razor 组件
-        services.AddRazorComponents();
+        // 3. 注册 Blazor 服务端渲染与 Interactive Server Razor 组件
+        services.AddRazorComponents()
+            .AddInteractiveServerComponents();
         services.AddAntiforgery();
 
         // 4. 注册 Vite 前端构建中间件与轻量 JSON i18n
@@ -221,7 +222,8 @@ public class AbpSparkWebModule : AbpModule
                 await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 return Results.Redirect("/");
             });
-            endpoints.MapRazorComponents<Abp.Spark.Pages.PageRoutes>();
+            endpoints.MapRazorComponents<Abp.Spark.Pages.PageRoutes>()
+                .AddInteractiveServerRenderMode();
         });
     }
 }

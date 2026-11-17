@@ -14,40 +14,29 @@
 }
 
 <header class="z-30 bg-white dark:bg-[#0e1726] shadow-sm sticky top-0 h-[60px] min-h-[60px] flex items-center transition-all duration-300">
-    <div class="flex items-center justify-between px-4 sm:px-6 w-full h-full">
-        <!-- Left: Logo (shown when sidebar collapsed) + Hamburger & Search -->
-        <div class="flex items-center gap-2 sm:gap-3">
-            <!-- Header Brand Logo (Auto visible when sidebar is collapsed or on mobile) -->
-            <div class="header-logo items-center gap-2 mr-1">
-                <a href="/" class="flex items-center gap-2">
+    <div class="flex items-center justify-between w-full h-full pr-4 sm:pr-6">
+        <!-- Left: Brand Logo + Sidebar Toggle (Exact 260px width matching Sidebar brand area) + Search -->
+        <div class="flex items-center gap-3">
+            <!-- Header Brand Box: 宽度固定 260px，折叠时与侧边栏折叠按钮位置绝对重合 -->
+            <div class="header-brand-box h-[60px] items-center justify-between px-6 shrink-0">
+                <a href="/" class="flex items-center gap-2.5 font-bold text-xl text-[#0e1726] dark:text-white tracking-wide">
                     <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md">
-                        <!-- Lucide: Sparkles -->
-                        <svg class="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-                            <path d="M5 3v4"/>
-                            <path d="M19 17v4"/>
-                            <path d="M3 5h4"/>
-                            <path d="M17 19h4"/>
-                        </svg>
+                        <LucideIcon Name="LayoutDashboard" Class="w-4 h-4 text-white" />
                     </div>
-                    <span class="uppercase font-extrabold text-base bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:inline font-nunito">
+                    <span class="uppercase font-extrabold text-base bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-nunito">
                         SPARK
                     </span>
                 </a>
-            </div>
 
-            <!-- Sidebar Toggle Button (Hidden on desktop when sidebar is open; visible when collapsed) -->
-            <button type="button"
-                    class="header-collapse-btn w-9 h-9 rounded-full items-center justify-center hover:bg-gray-100 dark:hover:bg-[#191e3a] text-[#0e1726] dark:text-white transition focus:outline-none cursor-pointer"
-                    onclick="window.themeManager?.toggleSidebar()"
-                    aria-label="Toggle Sidebar">
-                <!-- Lucide: Menu -->
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="4" x2="20" y1="12" y2="12" />
-                    <line x1="4" x2="20" y1="6" y2="6" />
-                    <line x1="4" x2="20" y1="18" y2="18" />
-                </svg>
-            </button>
+                <!-- 打开侧边栏按钮：大小 w-8 h-8 rounded-full，位置完全对齐 Sidebar 的收起按钮 -->
+                <button type="button"
+                        class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-[#191e3a] text-[#888ea8] hover:text-primary dark:hover:text-white transition cursor-pointer"
+                        onclick="window.themeManager?.toggleSidebar()"
+                        aria-label="Toggle Sidebar"
+                        title="Toggle Sidebar">
+                    <LucideIcon Name="Menu" Class="w-5 h-5" />
+                </button>
+            </div>
 
             <!-- Search Input (Borderless Soft Pill) -->
             <div class="hidden md:flex items-center relative">

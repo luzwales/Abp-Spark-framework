@@ -1,4 +1,6 @@
 ﻿@page "/dashboard"
+@rendermode InteractiveServer
+@attribute [Authorize]
 @inject IDashboardAppService DashboardService
 
 <PageTitle>@L["dashboard"]</PageTitle>
