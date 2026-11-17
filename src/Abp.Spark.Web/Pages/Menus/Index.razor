@@ -25,10 +25,10 @@
 
         <div class="flex items-center gap-2">
             <button type="button"
-                    class="btn btn-primary btn-sm flex items-center gap-2 shadow-sm font-bold text-xs"
+                    class="btn btn-primary w-9 h-9 p-0 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition cursor-pointer"
+                    title="@L["Create"]"
                     @onclick="() => OpenModal(null)">
-                <LucideIcon Name="FolderPlus" Class="w-4 h-4 text-white" />
-                <span>+ 新增菜单 / 分组</span>
+                <LucideIcon Name="Plus" Class="w-5 h-5 text-white" />
             </button>
         </div>
     </div>
@@ -37,10 +37,10 @@
     <div class="card bg-white dark:bg-[#0e1726] shadow-sm rounded-2xl p-4 border border-gray-100 dark:border-[#1b2e4b] flex items-center justify-between text-xs text-[#506690] dark:text-[#888ea8]">
         <div class="flex items-center gap-2.5">
             <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
-            <span>动态侧边栏由菜单配置（MenuConfig）驱动，支持按角色/用户绑定细粒度权限代码（PermissionName）。</span>
+            <span>@L["MenusTips"]</span>
         </div>
         <div class="font-mono text-[11px] font-bold text-primary">
-            总计: @_flatMenus.Count 个节点
+            @L["Total"]: <span class="font-mono font-bold">@_flatMenus.Count</span>
         </div>
     </div>
 
@@ -50,14 +50,14 @@
             <table class="w-full text-left text-xs text-[#506690] dark:text-[#888ea8]">
                 <thead>
                     <tr class="border-b border-gray-100 dark:border-[#191e3a] text-[#0e1726] dark:text-white font-extrabold uppercase tracking-wider text-[11px] bg-gray-50/50 dark:bg-[#121e32]/40">
-                        <th class="py-3 px-4">层级与标识</th>
-                        <th class="py-3 px-4">类型</th>
-                        <th class="py-3 px-4">路由地址</th>
-                        <th class="py-3 px-4">图标</th>
-                        <th class="py-3 px-4">绑定权限代码 (Permission)</th>
-                        <th class="py-3 px-4 text-center">排序</th>
-                        <th class="py-3 px-4 text-center">状态</th>
-                        <th class="py-3 px-4 text-right">操作</th>
+                        <th class="py-3 px-4">@L["Name"]</th>
+                        <th class="py-3 px-4">@L["Type"]</th>
+                        <th class="py-3 px-4">@L["Route"]</th>
+                        <th class="py-3 px-4">@L["Icon"]</th>
+                        <th class="py-3 px-4">@L["Permissions"]</th>
+                        <th class="py-3 px-4 text-center">@L["Sort"]</th>
+                        <th class="py-3 px-4 text-center">@L["Status"]</th>
+                        <th class="py-3 px-4 text-right">@L["Actions"]</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-[#191e3a]">
@@ -131,24 +131,28 @@
                                 <td class="py-3.5 px-4 text-center">
                                     @if (item.Dto.IsActive)
                                     {
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success">已启用</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success">@L["Active"]</span>
                                     }
                                     else
                                     {
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-danger/15 text-danger">已禁用</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-danger/15 text-danger">@L["Disabled"]</span>
                                     }
                                 </td>
                                 <td class="py-3.5 px-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <!-- View / Edit 纯 Eye 图标 -->
                                         <button type="button"
-                                                class="px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-[#191e3a] text-primary transition font-semibold"
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-primary hover:bg-primary/10 transition cursor-pointer"
+                                                title="@L["Edit"]"
                                                 @onclick="() => OpenModal(item.Dto)">
-                                            编辑
+                                            <LucideIcon Name="Eye" Class="w-3.5 h-3.5" />
                                         </button>
+                                        <!-- 删除 纯 Trash2 图标 -->
                                         <button type="button"
-                                                class="px-2 py-1 rounded hover:bg-danger/10 text-danger transition font-semibold"
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                                                title="@L["Delete"]"
                                                 @onclick="() => DeleteMenu(item.Dto.Id)">
-                                            删除
+                                            <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 </td>

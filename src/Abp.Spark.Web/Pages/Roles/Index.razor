@@ -3,6 +3,8 @@
 @attribute [Authorize]
 @inject IRoleAppService RoleAppService
 @inject IRolePermissionAppService RolePermissionAppService
+@inject Volo.Abp.Authorization.Permissions.IPermissionDefinitionManager PermissionDefinitionManager
+@inject Volo.Abp.Identity.IdentityRoleManager RoleManager
 @inject NavigationManager NavigationManager
 
 <PageTitle>@L["Roles"]</PageTitle>
@@ -25,21 +27,22 @@
         </div>
 
         <div class="flex items-center gap-3">
+            <!-- 纯 Plus 图标的新增按钮 -->
             <button type="button"
-                    class="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition cursor-pointer"
+                    class="btn btn-primary w-9 h-9 p-0 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition cursor-pointer"
+                    title="@L["Create"]"
                     @onclick="OpenCreateModal">
-                <LucideIcon Name="ShieldCheck" Class="w-4 h-4 text-white" />
-                <span>新增角色</span>
+                <LucideIcon Name="Plus" Class="w-5 h-5 text-white" />
             </button>
         </div>
     </div>
 
     <!-- Table Container Card -->
-    <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-6 shadow-sm">
+    <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-[#1b2e4b]">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div class="relative w-full sm:w-72">
                 <input type="text"
-                       placeholder="搜索角色名..."
+                       placeholder="@L["search_placeholder"]"
                        class="form-input w-full pl-10 pr-4 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white placeholder-[#888ea8] focus:ring-2 focus:ring-primary/20 outline-none transition"
                        @bind="_filter"
                        @bind:event="oninput" />
@@ -52,7 +55,7 @@
             </div>
 
             <div class="text-xs text-[#888ea8] font-semibold">
-                共找到 <span class="text-primary font-bold">@FilteredRoles.Count</span> 个系统角色
+                @L["Total"]: <span class="text-primary font-bold">@FilteredRoles.Count</span>
             </div>
         </div>
 
@@ -133,25 +136,29 @@
                                     @role.Id.ToString()[..8]...
                                 </td>
                                 <td class="py-3.5 px-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <!-- 权限配置按钮 -->
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <!-- 1. 编辑基础信息 (纯 View/Eye 图标) -->
                                         <button type="button"
-                                                class="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition text-xs font-bold flex items-center gap-1 cursor-pointer"
-                                                title="配置权限树"
-                                                @onclick="() => OpenPermissionModal(role)">
-                                            <LucideIcon Name="Network" Class="w-3.5 h-3.5" />
-                                            <span>权限矩阵</span>
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-primary hover:bg-primary/10 transition cursor-pointer"
+                                                title="@L["Edit"]"
+                                                @onclick="() => OpenEditModal(role)">
+                                            <LucideIcon Name="Eye" Class="w-3.5 h-3.5" />
                                         </button>
-                                        <!-- 删除按钮 -->
+
+                                        <!-- 2. 权限设定 (纯 ShieldCheck 图标) -->
+                                        <button type="button"
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-warning hover:bg-warning/10 transition cursor-pointer"
+                                                title="@L["Permissions"]"
+                                                @onclick="() => OpenPermissionModal(role)">
+                                            <LucideIcon Name="ShieldCheck" Class="w-3.5 h-3.5" />
+                                        </button>
+
+                                        <!-- 3. 删除 (纯 Trash2 图标) -->
                                         <button type="button"
                                                 class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
-                                                title="删除角色"
+                                                title="@L["Delete"]"
                                                 @onclick="() => DeleteRoleAsync(role.Id)">
-                                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M3 6h18"/>
-                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                            </svg>
+                                            <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 </td>
@@ -167,104 +174,110 @@
     @if (_showCreateModal)
     {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in border border-gray-100 dark:border-[#1b2e4b]">
                 <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
-                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white">新增系统角色</h3>
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
+                        <LucideIcon Name="Plus" Class="w-4 h-4 text-primary" />
+                        <span>@L["CreateRole"]</span>
+                    </h3>
                     <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
                 </div>
                 <div class="space-y-4 py-4">
                     <div>
-                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">角色名称</label>
-                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createRoleName" placeholder="例如：QCInspector, WorkshopSupervisor" />
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Name"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border border-gray-200 dark:border-[#191e3a] text-[#0e1726] dark:text-white outline-none" @bind="_createRoleName" placeholder="e.g. QualityManager" />
                     </div>
                     <div class="flex items-center gap-4 pt-2">
                         <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#0e1726] dark:text-white">
-                            <input type="checkbox" class="rounded text-primary" @bind="_createIsDefault" />
-                            <span>设为新用户默认角色</span>
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rounded" @bind="_createIsDefault" />
+                            <span>@L["Default"]</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#0e1726] dark:text-white">
-                            <input type="checkbox" class="rounded text-primary" @bind="_createIsPublic" />
-                            <span>公开可见</span>
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rounded" @bind="_createIsPublic" />
+                            <span>@L["Public"]</span>
                         </label>
                     </div>
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
-                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">取消</button>
-                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="CreateRoleAsync">创建角色</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="CreateRoleAsync">@L["Save"]</button>
                 </div>
             </div>
         </div>
     }
 
-    <!-- Permission Matrix Modal -->
+    <!-- Edit Role Modal -->
+    @if (_showEditModal && _selectedRole != null)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in border border-gray-100 dark:border-[#1b2e4b]">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
+                        <LucideIcon Name="Eye" Class="w-4 h-4 text-primary" />
+                        <span>@L["Edit"] - @_selectedRole.Name</span>
+                    </h3>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+                <div class="space-y-4 py-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Name"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border border-gray-200 dark:border-[#191e3a] text-[#0e1726] dark:text-white outline-none" @bind="_editRoleName" />
+                    </div>
+                    <div class="flex items-center gap-4 pt-2">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#0e1726] dark:text-white">
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rounded" @bind="_editIsDefault" />
+                            <span>@L["Default"]</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#0e1726] dark:text-white">
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rounded" @bind="_editIsPublic" />
+                            <span>@L["Public"]</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="UpdateRoleAsync">@L["Save"]</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Reusable Permission Tree Modal -->
     @if (_showPermissionModal && _selectedRole != null)
     {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl animate-fade-in">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl animate-fade-in border border-gray-100 dark:border-[#1b2e4b]">
                 <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
                     <div>
                         <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
-                            <LucideIcon Name="Network" Class="w-5 h-5 text-primary" />
-                            <span>角色权限矩阵授权 - @_selectedRole.Name</span>
+                            <LucideIcon Name="ShieldCheck" Class="w-5 h-5 text-warning" />
+                            <span>@L["Permissions"] - @_selectedRole.Name</span>
                         </h3>
-                        <p class="text-xs text-[#888ea8] mt-0.5">勾选赋予该角色的 ABP 领域层细粒度访问权限</p>
+                        <p class="text-xs text-[#888ea8] mt-0.5">@L["PermissionsSubtitle"]</p>
                     </div>
                     <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
                 </div>
 
-                <!-- Tree View Scroll Area -->
-                <div class="flex-1 overflow-y-auto py-4 space-y-4">
+                <!-- Tree View Scroll Area (using reusable PermissionTree component) -->
+                <div class="flex-1 overflow-y-auto py-4">
                     @if (_isPermissionLoading)
                     {
-                        <div class="py-12 text-center text-sm text-[#888ea8]">正在读取权限树...</div>
-                    }
-                    else if (!_permissionTree.Any())
-                    {
-                        <div class="py-12 text-center text-sm text-[#888ea8]">未找到权限定义</div>
+                        <div class="py-12 text-center text-sm text-[#888ea8]">@L["Loading"]</div>
                     }
                     else
                     {
-                        @foreach (var rootNode in _permissionTree)
-                        {
-                            <div class="p-4 rounded-xl border border-gray-100 dark:border-[#191e3a] bg-[#f9fafb] dark:bg-[#121e32]/30">
-                                <div class="flex items-center justify-between mb-2">
-                                    <label class="flex items-center gap-2 font-bold text-xs text-[#0e1726] dark:text-white cursor-pointer">
-                                        <input type="checkbox"
-                                               class="rounded text-primary"
-                                               checked="@_grantedPermissions.Contains(rootNode.Key)"
-                                               onchange="@(() => TogglePermission(rootNode.Key))" />
-                                        <span>@rootNode.Title</span>
-                                    </label>
-                                    <span class="text-[10px] text-[#888ea8] font-mono">@rootNode.Key</span>
-                                </div>
-
-                                @if (rootNode.Children.Any())
-                                {
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2 pt-2 border-t border-gray-200/50 dark:border-[#191e3a]/50 pl-4">
-                                        @foreach (var child in rootNode.Children)
-                                        {
-                                            <label class="flex items-center gap-2 text-xs text-[#506690] dark:text-[#888ea8] hover:text-primary cursor-pointer">
-                                                <input type="checkbox"
-                                                       class="rounded text-primary"
-                                                       checked="@_grantedPermissions.Contains(child.Key)"
-                                                       onchange="@(() => TogglePermission(child.Key))" />
-                                                <span class="truncate" title="@child.Title">@child.Title</span>
-                                            </label>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
+                        <PermissionTree AllPermissions="@_allPermissionKeys"
+                                        @bind-GrantedPermissions="_grantedPermissions" />
                     }
                 </div>
 
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#191e3a]">
                     <div class="text-xs text-[#888ea8]">
-                        已选中 <span class="font-bold text-primary">@_grantedPermissions.Count</span> 项权限
+                        @L["Granted"]: <span class="font-bold text-primary font-mono">@_grantedPermissions.Count</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">取消</button>
-                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="SavePermissionsAsync">保存权限授权</button>
+                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="SavePermissionsAsync">@L["Save"]</button>
                     </div>
                 </div>
             </div>
@@ -277,15 +290,23 @@
     private string _filter = string.Empty;
     private bool _isLoading = true;
 
+    // Create Modal State
     private bool _showCreateModal = false;
     private string _createRoleName = string.Empty;
     private bool _createIsDefault = false;
     private bool _createIsPublic = true;
 
+    // Edit Modal State
+    private bool _showEditModal = false;
+    private string _editRoleName = string.Empty;
+    private bool _editIsDefault = false;
+    private bool _editIsPublic = true;
+
+    // Permission Modal State
     private bool _showPermissionModal = false;
     private bool _isPermissionLoading = false;
     private IdentityRoleDto? _selectedRole;
-    private List<PermissionTreeDto> _permissionTree = new();
+    private List<string> _allPermissionKeys = new();
     private HashSet<string> _grantedPermissions = new();
 
     private List<IdentityRoleDto> FilteredRoles => string.IsNullOrWhiteSpace(_filter)
@@ -331,10 +352,41 @@
         {
             await RoleAppService.CreateAsync(new IdentityRoleCreateDto
             {
-                Name = _createRoleName,
+                Name = _createRoleName.Trim(),
                 IsDefault = _createIsDefault,
                 IsPublic = _createIsPublic
             });
+            CloseModal();
+            await LoadRolesAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private void OpenEditModal(IdentityRoleDto role)
+    {
+        _selectedRole = role;
+        _editRoleName = role.Name;
+        _editIsDefault = role.IsDefault;
+        _editIsPublic = role.IsPublic;
+        _showEditModal = true;
+    }
+
+    private async Task UpdateRoleAsync()
+    {
+        if (_selectedRole == null || string.IsNullOrWhiteSpace(_editRoleName)) return;
+
+        try
+        {
+            var roleEntity = await RoleManager.FindByIdAsync(_selectedRole.Id.ToString());
+            if (roleEntity != null)
+            {
+                await RoleManager.SetRoleNameAsync(roleEntity, _editRoleName.Trim());
+                roleEntity.IsDefault = _editIsDefault;
+                roleEntity.IsPublic = _editIsPublic;
+                await RoleManager.UpdateAsync(roleEntity);
+            }
             CloseModal();
             await LoadRolesAsync();
         }
@@ -361,17 +413,21 @@
         _showPermissionModal = true;
         _isPermissionLoading = true;
         _grantedPermissions.Clear();
-        _permissionTree.Clear();
+        _allPermissionKeys.Clear();
 
         try
         {
+            // 1. 获取系统已定义的权限代码
+            var defs = await PermissionDefinitionManager.GetPermissionsAsync();
+            _allPermissionKeys = defs.Select(p => p.Name).Distinct().ToList();
+
+            // 2. 获取该角色当前已授权的权限集合
             var res = await RolePermissionAppService.GetPermissionAsync(new GetPermissionInput
             {
                 ProviderName = "R",
                 ProviderKey = role.Name
             });
 
-            _permissionTree = res.Permissions ?? new();
             _grantedPermissions = new HashSet<string>(res.Grants ?? new());
         }
         catch
@@ -380,18 +436,6 @@
         finally
         {
             _isPermissionLoading = false;
-        }
-    }
-
-    private void TogglePermission(string key)
-    {
-        if (_grantedPermissions.Contains(key))
-        {
-            _grantedPermissions.Remove(key);
-        }
-        else
-        {
-            _grantedPermissions.Add(key);
         }
     }
 
@@ -427,6 +471,7 @@
     private void CloseModal()
     {
         _showCreateModal = false;
+        _showEditModal = false;
         _showPermissionModal = false;
         _selectedRole = null;
     }

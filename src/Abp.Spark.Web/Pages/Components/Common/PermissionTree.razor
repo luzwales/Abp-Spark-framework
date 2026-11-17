@@ -1,0 +1,277 @@
+@using Lion.AbpPro.BasicManagement.Permissions
+
+<div class="space-y-4">
+    <!-- Toolbar: Search + Quick Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 dark:bg-[#121e32]/40 p-3 rounded-xl border border-gray-100 dark:border-[#191e3a]">
+        <div class="relative w-full sm:w-64">
+            <input type="text"
+                   placeholder="@L["search_placeholder"]"
+                   class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-white dark:bg-[#0e1726] border border-gray-200 dark:border-[#1b2e4b] text-[#0e1726] dark:text-white placeholder-[#888ea8] focus:outline-none focus:ring-1 focus:ring-primary"
+                   @bind="_searchKeyword"
+                   @bind:event="oninput" />
+            <div class="absolute left-2.5 top-2 text-[#888ea8]">
+                <LucideIcon Name="Search" Class="w-3.5 h-3.5" />
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button type="button"
+                    class="btn btn-xs btn-ghost text-[11px] font-bold text-primary hover:bg-primary/10"
+                    @onclick="SelectAll">
+                @L["SelectAll"]
+            </button>
+            <span class="text-gray-300 dark:text-gray-700">|</span>
+            <button type="button"
+                    class="btn btn-xs btn-ghost text-[11px] font-bold text-[#888ea8] hover:text-danger hover:bg-danger/10"
+                    @onclick="UnselectAll">
+                @L["ClearAll"]
+            </button>
+            <span class="text-gray-300 dark:text-gray-700">|</span>
+            <button type="button"
+                    class="btn btn-xs btn-ghost text-[11px] font-semibold text-[#888ea8]"
+                    @onclick="ToggleExpandAll">
+                @(_allExpanded ? L["CollapseAll"] : L["ExpandAll"])
+            </button>
+        </div>
+    </div>
+
+    <!-- Tree View Container -->
+    <div class="max-h-[380px] overflow-y-auto pr-1 space-y-1">
+        @if (!_rootNodes.Any())
+        {
+            <div class="text-center py-8 text-xs text-[#888ea8]">
+                @L["NoData"]
+            </div>
+        }
+        else
+        {
+            @foreach (var node in FilteredRoots)
+            {
+                @RenderNode(node, 0)
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<string> AllPermissions { get; set; } = new();
+    [Parameter] public HashSet<string> GrantedPermissions { get; set; } = new();
+    [Parameter] public EventCallback<HashSet<string>> GrantedPermissionsChanged { get; set; }
+
+    private List<TreeNode> _rootNodes = new();
+    private string _searchKeyword = string.Empty;
+    private bool _allExpanded = true;
+
+    protected override void OnParametersSet()
+    {
+        BuildTree();
+    }
+
+    private void BuildTree()
+    {
+        _rootNodes.Clear();
+        var nodeMap = new Dictionary<string, TreeNode>(StringComparer.OrdinalIgnoreCase);
+
+        // 将扁平的点号权限列表（如 AbpIdentity.Roles.Create）拆分构建多叉树
+        foreach (var fullKey in AllPermissions.Distinct().OrderBy(x => x))
+        {
+            if (string.IsNullOrWhiteSpace(fullKey)) continue;
+
+            var segments = fullKey.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            string currentPath = "";
+            TreeNode? parent = null;
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var seg = segments[i];
+                currentPath = i == 0 ? seg : $"{currentPath}.{seg}";
+                bool isLeaf = (i == segments.Length - 1);
+
+                if (!nodeMap.TryGetValue(currentPath, out var node))
+                {
+                    node = new TreeNode
+                    {
+                        Key = currentPath,
+                        SegmentName = seg,
+                        FullPermission = isLeaf ? fullKey : null,
+                        IsLeaf = isLeaf,
+                        IsExpanded = true
+                    };
+                    nodeMap[currentPath] = node;
+
+                    if (parent == null)
+                    {
+                        _rootNodes.Add(node);
+                    }
+                    else
+                    {
+                        parent.Children.Add(node);
+                    }
+                }
+                else if (isLeaf)
+                {
+                    node.IsLeaf = true;
+                    node.FullPermission = fullKey;
+                }
+
+                parent = node;
+            }
+        }
+    }
+
+    private IEnumerable<TreeNode> FilteredRoots
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_searchKeyword)) return _rootNodes;
+            return _rootNodes.Where(r => MatchesKeyword(r, _searchKeyword.Trim()));
+        }
+    }
+
+    private bool MatchesKeyword(TreeNode node, string keyword)
+    {
+        if (node.Key.Contains(keyword, StringComparison.OrdinalIgnoreCase)) return true;
+        return node.Children.Any(c => MatchesKeyword(c, keyword));
+    }
+
+    private RenderFragment RenderNode(TreeNode node, int depth) => __builder =>
+    {
+        var leaves = node.GetAllLeaves();
+        int totalLeaves = leaves.Count;
+        int checkedLeaves = leaves.Count(k => GrantedPermissions.Contains(k));
+        bool isAllChecked = totalLeaves > 0 && checkedLeaves == totalLeaves;
+        bool isPartiallyChecked = checkedLeaves > 0 && checkedLeaves < totalLeaves;
+
+        <div class="select-none py-1 transition-colors rounded-lg hover:bg-gray-50/70 dark:hover:bg-[#121e32]/40"
+             style="padding-left: @(depth * 18 + 6)px;">
+            <div class="flex items-center gap-2">
+                <!-- Expander Icon -->
+                @if (node.Children.Any())
+                {
+                    <button type="button"
+                            class="w-4 h-4 flex items-center justify-center text-[#888ea8] hover:text-primary transition-transform cursor-pointer"
+                            @onclick="() => node.IsExpanded = !node.IsExpanded">
+                        <LucideIcon Name="@(node.IsExpanded ? "ChevronDown" : "ChevronRight")" Class="w-3.5 h-3.5" />
+                    </button>
+                }
+                else
+                {
+                    <span class="w-4 h-4 inline-block"></span>
+                }
+
+                <!-- Checkbox -->
+                <input type="checkbox"
+                       checked="@isAllChecked"
+                       class="checkbox checkbox-primary checkbox-xs rounded transition cursor-pointer @(isPartiallyChecked ? "opacity-75" : "")"
+                       @onchange="() => ToggleNode(node, !isAllChecked)" />
+
+                <!-- Node Label & Icon -->
+                <div class="flex items-center gap-1.5 cursor-pointer text-xs" @onclick="() => ToggleNode(node, !isAllChecked)">
+                    @if (node.Children.Any())
+                    {
+                        <LucideIcon Name="Folder" Class="w-3.5 h-3.5 text-[#888ea8] shrink-0" />
+                        <span class="font-bold text-[#0e1726] dark:text-white">@node.SegmentName</span>
+                        <span class="text-[10px] text-[#888ea8] font-mono">(@checkedLeaves/@totalLeaves)</span>
+                    }
+                    else
+                    {
+                        <span class="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0"></span>
+                        <span class="text-[#0e1726] dark:text-white font-medium">@node.SegmentName</span>
+                        <span class="text-[10px] text-[#888ea8] font-mono">(@node.Key)</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Children Recursion -->
+            @if (node.IsExpanded && node.Children.Any())
+            {
+                <div class="space-y-0.5 mt-0.5 border-l border-dashed border-gray-200 dark:border-[#191e3a] ml-2">
+                    @foreach (var child in node.Children)
+                    {
+                        @if (string.IsNullOrWhiteSpace(_searchKeyword) || MatchesKeyword(child, _searchKeyword.Trim()))
+                        {
+                            @RenderNode(child, depth + 1)
+                        }
+                    }
+                </div>
+            }
+        </div>
+    };
+
+    private async Task ToggleNode(TreeNode node, bool isChecked)
+    {
+        var leaves = node.GetAllLeaves();
+        if (isChecked)
+        {
+            foreach (var l in leaves)
+            {
+                GrantedPermissions.Add(l);
+            }
+        }
+        else
+        {
+            foreach (var l in leaves)
+            {
+                GrantedPermissions.Remove(l);
+            }
+        }
+        await GrantedPermissionsChanged.InvokeAsync(GrantedPermissions);
+    }
+
+    private async Task SelectAll()
+    {
+        foreach (var root in _rootNodes)
+        {
+            foreach (var leaf in root.GetAllLeaves())
+            {
+                GrantedPermissions.Add(leaf);
+            }
+        }
+        await GrantedPermissionsChanged.InvokeAsync(GrantedPermissions);
+    }
+
+    private async Task UnselectAll()
+    {
+        GrantedPermissions.Clear();
+        await GrantedPermissionsChanged.InvokeAsync(GrantedPermissions);
+    }
+
+    private void ToggleExpandAll()
+    {
+        _allExpanded = !_allExpanded;
+        SetExpandRecursively(_rootNodes, _allExpanded);
+    }
+
+    private void SetExpandRecursively(List<TreeNode> nodes, bool isExpanded)
+    {
+        foreach (var n in nodes)
+        {
+            n.IsExpanded = isExpanded;
+            SetExpandRecursively(n.Children, isExpanded);
+        }
+    }
+
+    public class TreeNode
+    {
+        public string Key { get; set; } = string.Empty;
+        public string SegmentName { get; set; } = string.Empty;
+        public string? FullPermission { get; set; }
+        public bool IsLeaf { get; set; }
+        public bool IsExpanded { get; set; } = true;
+        public List<TreeNode> Children { get; set; } = new();
+
+        public List<string> GetAllLeaves()
+        {
+            var list = new List<string>();
+            if (IsLeaf && !string.IsNullOrEmpty(FullPermission))
+            {
+                list.Add(FullPermission);
+            }
+            foreach (var c in Children)
+            {
+                list.AddRange(c.GetAllLeaves());
+            }
+            return list;
+        }
+    }
+}

@@ -14,19 +14,10 @@
         @apply bg-[#fafafa] dark:bg-[#060818] text-[#0e1726] dark:text-[#888ea8] h-screen overflow-hidden antialiased;
     }
 
-    /* 现代平滑滚动条：默认透明隐藏，仅 hover 或滑动时显现，避免布局跳动 */
+    /* 现代平滑滚动条：默认透明隐藏，仅 hover 滚动条滑块/轨道位置本身时显现，不随整个 div hover 触发，避免布局跳动 */
     * {
         scrollbar-width: thin;
         scrollbar-color: transparent transparent;
-        transition: scrollbar-color 0.25s ease-in-out;
-    }
-
-    *:hover {
-        scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
-    }
-
-    .dark *:hover {
-        scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
     }
 
     ::-webkit-scrollbar {
@@ -42,24 +33,21 @@
     ::-webkit-scrollbar-thumb {
         background: transparent;
         border-radius: 9999px;
-        transition: background-color 0.25s ease-in-out;
+        transition: background-color 0.2s ease-in-out;
     }
 
-    *:hover::-webkit-scrollbar-thumb,
-    div:hover::-webkit-scrollbar-thumb,
-    main:hover::-webkit-scrollbar-thumb,
-    .main-content-scroll:hover::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.4);
-    }
-
-    .dark *:hover::-webkit-scrollbar-thumb,
-    .dark div:hover::-webkit-scrollbar-thumb,
-    .dark main:hover::-webkit-scrollbar-thumb,
-    .dark .main-content-scroll:hover::-webkit-scrollbar-thumb {
-        background: rgba(100, 116, 139, 0.4);
-    }
-
+    /* 仅当鼠标真正移到滚动条位置上时显现 */
+    ::-webkit-scrollbar:hover,
     ::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.5) !important;
+    }
+
+    .dark ::-webkit-scrollbar:hover,
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: rgba(100, 116, 139, 0.5) !important;
+    }
+
+    ::-webkit-scrollbar-thumb:active {
         background: #4361ee !important;
     }
 }
