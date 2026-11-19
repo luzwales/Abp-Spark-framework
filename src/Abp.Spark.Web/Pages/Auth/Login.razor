@@ -83,15 +83,15 @@
 		public LoginFormValidator()
 		{
 			RuleFor(p => p.Email)
-				.NotEmpty().WithMessage("请输入用户名或邮箱 (Username or Email is required)");
+				.NotEmpty().WithMessage("Username or Email is required");
 		
 			RuleFor(p => p.Password)
-				.NotEmpty().WithMessage("请输入密码 (Password is required)");
+				.NotEmpty().WithMessage("Password is required");
 		}
 	}
 }
 
-<PageTitle>Login - ABP Spark</PageTitle>
+<PageTitle>@L["login"] - Abp.Spark</PageTitle>
 
 <div class="sm:py-12 px-4">
 	<section class="w-full sm:max-w-md mx-auto py-16 flex flex-col justify-center items-center space-y-6">
@@ -104,7 +104,7 @@
 			</span>
 		</a>
 		<h1 class="text-center text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito">
-			登录到系统控制台
+			@L["SignInTitle"]
 		</h1>
 		<form action="/login-direct" method="post" class="grid grid-cols-1 gap-y-5 p-6 sm:p-8 bg-white dark:bg-[#0e1726] mx-auto w-full max-w-md shadow-sm border border-gray-100 dark:border-[#1b2e4b] rounded-2xl">
 			@if (!string.IsNullOrEmpty(Error) || !string.IsNullOrEmpty(_loginFailedMessage))
@@ -118,25 +118,25 @@
 			<div class="p-3 rounded-xl bg-[#f1f2f3]/70 dark:bg-[#121e32] border border-gray-100 dark:border-transparent text-xs text-[#506690] dark:text-[#888ea8] space-y-1.5">
 				<div class="font-bold text-[#0e1726] dark:text-white flex items-center gap-1.5">
 					<span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-					ABP 默认超级管理员种子账号
+					@L["DefaultSeedAccount"]
 				</div>
 				<div class="flex items-center justify-between font-mono text-[11px]">
-					<span>用户名: <strong class="text-primary font-bold">admin</strong></span>
-					<span>密码: <strong class="text-primary font-bold">1q2w3E*</strong></span>
-					<span>角色: <strong class="text-success font-bold">admin</strong></span>
+					<span>@L["Operator"]: <strong class="text-primary font-bold">admin</strong></span>
+					<span>@L["Password"]: <strong class="text-primary font-bold">1q2w3E*</strong></span>
+					<span>@L["Role"]: <strong class="text-success font-bold">admin</strong></span>
 				</div>
 			</div>
 
 			<label class="form-control w-full">
 				<div class="label pb-1.5">
-					<span class="label-text font-semibold text-xs text-[#0e1726] dark:text-white">用户名或邮箱 (Username / Email)</span>
+					<span class="label-text font-semibold text-xs text-[#0e1726] dark:text-white">@L["UsernameOrEmail"]</span>
 				</div>
 				<input name="Email" type="text" autocomplete="username" value="admin" placeholder="admin" required class="input input-bordered w-full text-sm bg-transparent" />
             </label>
 
 			<label class="form-control w-full">
 				<div class="label pb-1.5">
-					<span class="label-text font-semibold text-xs text-[#0e1726] dark:text-white">密码 (Password)</span>
+					<span class="label-text font-semibold text-xs text-[#0e1726] dark:text-white">@L["Password"]</span>
 				</div>
 				<input name="Password" type="password" autocomplete="current-password" placeholder="1q2w3E*" required class="input input-bordered w-full text-sm bg-transparent" />
             </label>
@@ -144,16 +144,16 @@
 			<div class="form-control">
               <label class="label cursor-pointer justify-start gap-2 py-0">
                 <input type="checkbox" name="RememberMe" value="true" checked class="checkbox checkbox-primary checkbox-sm rounded" />
-                <span class="label-text text-xs text-[#506690] dark:text-[#888ea8]">7 天内免登录 (Remember me)</span>
+                <span class="label-text text-xs text-[#506690] dark:text-[#888ea8]">@L["RememberMe"]</span>
               </label>
             </div>
 
             <div class="flex flex-col gap-3 pt-2">
 	            <button type="submit" class="btn btn-primary w-full shadow-md text-sm font-bold">
-				    登 录 (Sign In)
+				    @L["SignIn"]
 	            </button>
 	            <div class="text-center">
-		            <a href="/" class="text-xs text-[#888ea8] hover:text-primary transition">← 返回首页</a>
+		            <a href="/" class="text-xs text-[#888ea8] hover:text-primary transition">@L["BackToHome"]</a>
 	            </div>
             </div>
 		</form>

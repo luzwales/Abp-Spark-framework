@@ -7,28 +7,19 @@
 <PageTitle>@L["Menus"]</PageTitle>
 
 <section class="space-y-6">
-    <!-- Breadcrumb & Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <ul class="flex items-center gap-2 text-xs text-[#888ea8] mb-1 font-semibold">
-                <li><a href="/" class="hover:text-primary transition-colors">@L["home"]</a></li>
-                <li><span>/</span></li>
-                <li><a href="/dashboard" class="hover:text-primary transition-colors">@L["Dashboard"]</a></li>
-                <li><span>/</span></li>
-                <li class="text-primary font-bold">@L["Menus"]</li>
-            </ul>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
-                <LucideIcon Name="Menu" Class="w-7 h-7 text-primary" />
-                <span>@L["Menus"]</span>
-            </h1>
-        </div>
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="Menu" Class="w-7 h-7 text-primary" />
+            <span>@L["Menus"]</span>
+        </h1>
 
         <div class="flex items-center gap-2">
             <button type="button"
-                    class="btn btn-primary w-9 h-9 p-0 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition cursor-pointer"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
                     title="@L["Create"]"
                     @onclick="() => OpenModal(null)">
-                <LucideIcon Name="Plus" Class="w-5 h-5 text-white" />
+                <LucideIcon Name="Plus" Class="w-4 h-4" />
             </button>
         </div>
     </div>
@@ -65,7 +56,7 @@
                     {
                         <tr>
                             <td colspan="8" class="text-center py-12 text-[#888ea8]">
-                                暂无菜单配置数据
+                                @L["NoData"]
                             </td>
                         </tr>
                     }
@@ -94,13 +85,13 @@
                                     @if (item.IsGroup)
                                     {
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/10 text-secondary">
-                                            GROUP 分组
+                                            @L["Group"]
                                         </span>
                                     }
                                     else
                                     {
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary">
-                                            LINK 链接
+                                            @L["Link"]
                                         </span>
                                     }
                                 </td>
@@ -116,7 +107,7 @@
                                 <td class="py-3.5 px-4">
                                     @if (string.IsNullOrEmpty(item.Dto.PermissionName))
                                     {
-                                        <span class="text-[#888ea8] italic">公开 / 登录即可见</span>
+                                        <span class="text-[#888ea8] italic">@L["Public"]</span>
                                     }
                                     else
                                     {
@@ -172,8 +163,8 @@
         <div class="card bg-white dark:bg-[#0e1726] shadow-2xl rounded-2xl max-w-lg w-full border border-gray-100 dark:border-[#1b2e4b] overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-[#191e3a] flex items-center justify-between">
                 <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
-                    <LucideIcon Name="@(_editingId.HasValue ? "SquarePen" : "PlusCircle")" Class="w-5 h-5 text-primary" />
-                    <span>@(_editingId.HasValue ? "编辑菜单配置" : "新建菜单项 / 分组")</span>
+                    <LucideIcon Name="@(_editingId.HasValue ? "Eye" : "Plus")" Class="w-4 h-4 text-primary" />
+                    <span>@(_editingId.HasValue ? L["Edit"] : L["Create"])</span>
                 </h3>
                 <button type="button" class="text-[#888ea8] hover:text-[#0e1726] dark:hover:text-white" @onclick="CloseModal">
                     ✕
@@ -190,54 +181,54 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">上级节点 (Parent)</label>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Parent"]</label>
                         <select @bind="_form.ParentId" class="select select-bordered select-sm w-full bg-transparent">
-                            <option value="">[顶层独立项 / 根节点]</option>
+                            <option value="">@L["RootNode"]</option>
                             @foreach (var g in _groupMenus)
                             {
-                                <option value="@g.Id">📂 @g.Name (@g.Label)</option>
+                                <option value="@g.Id">@g.Name (@g.Label)</option>
                             }
                         </select>
                     </div>
 
                     <div>
-                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">节点类型 (Type)</label>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Type"]</label>
                         <select @bind="_form.Type" class="select select-bordered select-sm w-full bg-transparent">
-                            <option value="@SidebarItemType.Link">链接 (Link)</option>
-                            <option value="@SidebarItemType.Group">分组 (Group)</option>
+                            <option value="@SidebarItemType.Link">@L["Link"]</option>
+                            <option value="@SidebarItemType.Group">@L["Group"]</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">唯一标识 (Name) *</label>
-                        <input type="text" @bind="_form.Name" placeholder="如 MenuManagement" class="input input-bordered input-sm w-full bg-transparent" />
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Name"] *</label>
+                        <input type="text" @bind="_form.Name" placeholder="MenuManagement" class="input input-bordered input-sm w-full bg-transparent" />
                     </div>
                     <div>
-                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">显示名称/多语言Key (Label) *</label>
-                        <input type="text" @bind="_form.Label" placeholder="如 Menus" class="input input-bordered input-sm w-full bg-transparent" />
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Label"] *</label>
+                        <input type="text" @bind="_form.Label" placeholder="Menus" class="input input-bordered input-sm w-full bg-transparent" />
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">路由地址 (Route)</label>
-                        <input type="text" @bind="_form.Route" placeholder="如 /menus" class="input input-bordered input-sm w-full bg-transparent" />
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Route"]</label>
+                        <input type="text" @bind="_form.Route" placeholder="/menus" class="input input-bordered input-sm w-full bg-transparent" />
                     </div>
                     <div>
-                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">Lucide 图标名 (Icon)</label>
-                        <input type="text" @bind="_form.Icon" placeholder="如 Menu / Settings" class="input input-bordered input-sm w-full bg-transparent" />
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Icon"]</label>
+                        <input type="text" @bind="_form.Icon" placeholder="Menu / Settings" class="input input-bordered input-sm w-full bg-transparent" />
                     </div>
                 </div>
 
                 <div>
                     <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">
-                        绑定权限代码 (PermissionName)
+                        @L["Permissions"]
                     </label>
-                    <input type="text" @bind="_form.PermissionName" placeholder="留空则登录可见，如 SparkSystem.Menus 或 AbpIdentity.Users" class="input input-bordered input-sm w-full bg-transparent font-mono" />
+                    <input type="text" @bind="_form.PermissionName" placeholder="e.g. SparkSystem.Menus" class="input input-bordered input-sm w-full bg-transparent font-mono" />
                     <div class="mt-1.5 flex flex-wrap gap-1.5 items-center">
-                        <span class="text-[10px] text-[#888ea8]">快捷填入:</span>
+                        <span class="text-[10px] text-[#888ea8]">@L["QuickFill"]:</span>
                         <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "SparkSystem.Menus"'>SparkSystem.Menus</button>
                         <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpIdentity.Users"'>AbpIdentity.Users</button>
                         <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpIdentity.Roles"'>AbpIdentity.Roles</button>
@@ -245,27 +236,27 @@
                         <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpTenantManagement.Tenants"'>AbpTenantManagement.Tenants</button>
                     </div>
                     <p class="text-[10px] text-[#888ea8] mt-1">
-                        当用户/角色拥有该权限时才会在侧边栏渲染该项；留空表示所有已登录用户默认可见。
+                        @L["PermissionHint"]
                     </p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 pt-1">
                     <div>
-                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">排序权重 (SortOrder)</label>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Sort"]</label>
                         <input type="number" @bind="_form.SortOrder" class="input input-bordered input-sm w-full bg-transparent" />
                     </div>
                     <div class="flex items-center pt-6">
                         <label class="label cursor-pointer gap-2">
                             <input type="checkbox" @bind="_form.IsActive" class="checkbox checkbox-primary checkbox-sm rounded" />
-                            <span class="label-text text-xs text-[#0e1726] dark:text-white font-semibold">启用该菜单</span>
+                            <span class="label-text text-xs text-[#0e1726] dark:text-white font-semibold">@L["Active"]</span>
                         </label>
                     </div>
                 </div>
             </div>
 
             <div class="px-6 py-4 bg-gray-50 dark:bg-[#121e32]/60 border-t border-gray-100 dark:border-[#191e3a] flex items-center justify-end gap-3">
-                <button type="button" class="btn btn-ghost btn-sm text-xs" @onclick="CloseModal">取消</button>
-                <button type="button" class="btn btn-primary btn-sm text-xs font-bold" @onclick="SaveMenu">保存并生效</button>
+                <button type="button" class="btn btn-ghost btn-sm text-xs" @onclick="CloseModal">@L["Cancel"]</button>
+                <button type="button" class="btn btn-primary btn-sm text-xs font-bold" @onclick="SaveMenu">@L["Save"]</button>
             </div>
         </div>
     </div>
@@ -365,7 +356,7 @@
     {
         if (string.IsNullOrWhiteSpace(_form.Name) || string.IsNullOrWhiteSpace(_form.Label))
         {
-            _modalError = "标识(Name)和标签(Label)不能为空";
+            _modalError = "Name and Label are required";
             return;
         }
 

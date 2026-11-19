@@ -185,7 +185,7 @@ public class AbpSparkWebModule : AbpModule
             // 语言动态切换服务端端点 (支持无 JS 刷新重定向)
             endpoints.MapGet("/change-language", (HttpContext ctx, string culture, string? returnUrl) =>
             {
-                var target = string.IsNullOrWhiteSpace(culture) ? "zh" : culture.Trim().ToLowerInvariant();
+                var target = string.IsNullOrWhiteSpace(culture) ? "en" : culture.Trim().ToLowerInvariant();
                 var normalized = target.StartsWith("en") ? "en" : "zh";
 
                 var cookieOptions = new CookieOptions

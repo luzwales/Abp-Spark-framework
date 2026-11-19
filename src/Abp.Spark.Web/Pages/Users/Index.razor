@@ -7,28 +7,19 @@
 <PageTitle>@L["Users"]</PageTitle>
 
 <section class="space-y-6">
-    <!-- Breadcrumb & Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <ul class="flex items-center gap-2 text-xs text-[#888ea8] mb-1 font-semibold">
-                <li><a href="/" class="hover:text-primary transition-colors">@L["home"]</a></li>
-                <li><span>/</span></li>
-                <li><a href="/dashboard" class="hover:text-primary transition-colors">@L["Dashboard"]</a></li>
-                <li><span>/</span></li>
-                <li class="text-primary font-bold">@L["Users"]</li>
-            </ul>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
-                <LucideIcon Name="Users" Class="w-7 h-7 text-primary" />
-                <span>@L["Users"]</span>
-            </h1>
-        </div>
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="Users" Class="w-7 h-7 text-primary" />
+            <span>@L["Users"]</span>
+        </h1>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
             <button type="button"
-                    class="btn btn-primary w-9 h-9 p-0 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition cursor-pointer"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
                     title="@L["Create"]"
                     @onclick="OpenCreateModal">
-                <LucideIcon Name="Plus" Class="w-5 h-5 text-white" />
+                <LucideIcon Name="Plus" Class="w-4 h-4" />
             </button>
         </div>
     </div>
@@ -73,7 +64,7 @@
                     {
                         <tr>
                             <td colspan="5" class="py-12 text-center text-sm text-[#888ea8]">
-                                正在加载用户数据...
+                                @L["Loading"]
                             </td>
                         </tr>
                     }
@@ -81,7 +72,7 @@
                     {
                         <tr>
                             <td colspan="5" class="py-12 text-center text-sm text-[#888ea8]">
-                                暂无匹配的用户记录
+                                @L["NoData"]
                             </td>
                         </tr>
                     }

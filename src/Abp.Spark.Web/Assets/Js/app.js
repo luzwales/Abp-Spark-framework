@@ -39,7 +39,7 @@
             }
         },
         getStoredLanguage() {
-            return localStorage.getItem('spark_locale') || getCookie('spark_locale') || 'zh';
+            return localStorage.getItem('spark_locale') || getCookie('spark_locale') || 'en';
         },
         setLanguage(lang) {
             localStorage.setItem('spark_locale', lang);

@@ -8,28 +8,19 @@
 <PageTitle>@L["OrganizationUnits"]</PageTitle>
 
 <section class="space-y-6">
-    <!-- Breadcrumb & Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <ul class="flex items-center gap-2 text-xs text-[#888ea8] mb-1 font-semibold">
-                <li><a href="/" class="hover:text-primary transition-colors">@L["home"]</a></li>
-                <li><span>/</span></li>
-                <li><a href="/dashboard" class="hover:text-primary transition-colors">@L["Dashboard"]</a></li>
-                <li><span>/</span></li>
-                <li class="text-primary font-bold">@L["OrganizationUnits"]</li>
-            </ul>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
-                <LucideIcon Name="Network" Class="w-7 h-7 text-primary" />
-                <span>@L["OrganizationUnits"]</span>
-            </h1>
-        </div>
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="Network" Class="w-7 h-7 text-primary" />
+            <span>@L["OrganizationUnits"]</span>
+        </h1>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
             <button type="button"
-                    class="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition cursor-pointer"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                    title="@L["CreateOu"]"
                     @onclick="() => OpenCreateModal(null)">
-                <LucideIcon Name="Network" Class="w-4 h-4 text-white" />
-                <span>新增根部门</span>
+                <LucideIcon Name="Plus" Class="w-4 h-4" />
             </button>
         </div>
     </div>
@@ -39,17 +30,17 @@
         <!-- Left: Organization Tree -->
         <div class="lg:col-span-5 card bg-white dark:bg-[#0e1726] rounded-2xl p-5 shadow-sm space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#191e3a]">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#0e1726] dark:text-white">组织架构树</h3>
-                <span class="text-[11px] text-[#888ea8]">共 @_allOusCount 个部门</span>
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#0e1726] dark:text-white">@L["OrgTree"]</h3>
+                <span class="text-[11px] text-[#888ea8] font-mono">@L["Total"]: @_allOusCount</span>
             </div>
 
             @if (_isLoading)
             {
-                <div class="py-12 text-center text-xs text-[#888ea8]">正在读取组织架构树...</div>
+                <div class="py-12 text-center text-xs text-[#888ea8]">@L["Loading"]</div>
             }
             else if (!_ouTree.Any())
             {
-                <div class="py-12 text-center text-xs text-[#888ea8]">暂无部门数据</div>
+                <div class="py-12 text-center text-xs text-[#888ea8]">@L["NoData"]</div>
             }
             else
             {
@@ -68,7 +59,7 @@
             {
                 <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-12 text-center shadow-sm">
                     <LucideIcon Name="Network" Class="w-12 h-12 mx-auto text-[#888ea8] opacity-40 mb-3" />
-                    <p class="text-xs font-semibold text-[#888ea8]">请在左侧选择一个组织机构以查看详情并配置角色</p>
+                    <p class="text-xs font-semibold text-[#888ea8]">@L["SelectOuHint"]</p>
                 </div>
             }
             else
@@ -82,31 +73,29 @@
                                 <h2 class="text-lg font-bold text-[#0e1726] dark:text-white">@_selectedOu.DisplayName</h2>
                             </div>
                             <div class="text-xs text-[#888ea8] mt-1 flex items-center gap-4">
-                                <span>主管: <strong class="text-[#0e1726] dark:text-white">@(_selectedOu.ManagerName ?? "未指定")</strong></span>
-                                <span>级别: <strong class="text-primary font-bold">L@(_selectedOu.ManagerLevel ?? 1)</strong></span>
+                                <span>@L["Manager"]: <strong class="text-[#0e1726] dark:text-white">@(_selectedOu.ManagerName ?? L["Unspecified"])</strong></span>
+                                <span>@L["Level"]: <strong class="text-primary font-bold">L@(_selectedOu.ManagerLevel ?? 1)</strong></span>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5">
                             <button type="button"
-                                    class="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#121e32] text-xs font-bold text-[#0e1726] dark:text-white hover:text-primary transition cursor-pointer"
+                                    class="w-7 h-7 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                                    title="@L["AddChildOu"]"
                                     @onclick="() => OpenCreateModal(_selectedOu.Id)">
-                                + 子部门
+                                <LucideIcon Name="Plus" Class="w-3.5 h-3.5" />
                             </button>
                             <button type="button"
-                                    class="px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-bold shadow-sm hover:shadow-md transition cursor-pointer"
+                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-warning hover:bg-warning/10 transition cursor-pointer"
+                                    title="@L["AssignRoles"]"
                                     @onclick="OpenAssignRoleModal">
-                                角色授权分发
+                                <LucideIcon Name="ShieldCheck" Class="w-3.5 h-3.5" />
                             </button>
                             <button type="button"
-                                    class="p-2 rounded-xl text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
-                                    title="删除此部门"
+                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                                    title="@L["Delete"]"
                                     @onclick="() => DeleteOuAsync(_selectedOu.Id)">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 6h18"/>
-                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                </svg>
+                                <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
                             </button>
                         </div>
                     </div>
@@ -115,14 +104,14 @@
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#0e1726] dark:text-white">
-                                当前部门直属角色 (@_ouRoles.Count)
+                                @L["DirectRoles"] (@_ouRoles.Count)
                             </h4>
                         </div>
 
                         @if (!_ouRoles.Any())
                         {
                             <div class="p-6 rounded-xl border border-dashed border-gray-200 dark:border-[#191e3a] text-center text-xs text-[#888ea8]">
-                                当前部门尚未直接绑定任何角色，点击上方「角色授权分发」进行设定。
+                                @L["NoDirectRolesHint"]
                             </div>
                         }
                         else
@@ -137,7 +126,7 @@
                                             </div>
                                             <div>
                                                 <div class="text-xs font-bold text-[#0e1726] dark:text-white">@role.Name</div>
-                                                <div class="text-[10px] text-[#888ea8]">已生效于本部门成员</div>
+                                                <div class="text-[10px] text-[#888ea8]">@L["EffectiveForMembers"]</div>
                                             </div>
                                         </div>
                                     </div>
@@ -148,20 +137,20 @@
                         <!-- Quick Role Distribution Action Tiles -->
                         <div class="pt-4 border-t border-gray-100 dark:border-[#191e3a]">
                             <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#888ea8] mb-3">
-                                快捷授权策略 (参照 FlexQuality 扩展规范)
+                                @L["QuickPoliciesTitle"]
                             </h4>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div class="p-3.5 rounded-xl border border-gray-100 dark:border-[#191e3a] bg-white dark:bg-[#0e1726] hover:border-primary/50 transition">
-                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">子部门级联分配</div>
-                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">向当前部门及其全部下级子孙部门同步赋予选定角色。</p>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["PolicyChildrenTitle"]</div>
+                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">@L["PolicyChildrenDesc"]</p>
                                 </div>
                                 <div class="p-3.5 rounded-xl border border-gray-100 dark:border-[#191e3a] bg-white dark:bg-[#0e1726] hover:border-primary/50 transition">
-                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">部门主管经理授权</div>
-                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">直接将角色赋予当前部门主管 (@(_selectedOu.ManagerName ?? "未指定"))。</p>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["PolicyManagerTitle"]</div>
+                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">@L["PolicyManagerDesc"]</p>
                                 </div>
                                 <div class="p-3.5 rounded-xl border border-gray-100 dark:border-[#191e3a] bg-white dark:bg-[#0e1726] hover:border-primary/50 transition">
-                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">所有子部门主管授权</div>
-                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">批量扫描下属各子部门，向所有子部门主管授予角色。</p>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["PolicyChildrenManagersTitle"]</div>
+                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">@L["PolicyChildrenManagersDesc"]</p>
                                 </div>
                             </div>
                         </div>
@@ -178,19 +167,19 @@
             <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in">
                 <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
                     <h3 class="text-base font-bold text-[#0e1726] dark:text-white">
-                        @(_createParentId.HasValue ? "新增子组织机构" : "新增根组织机构")
+                        @(_createParentId.HasValue ? L["CreateChildOu"] : L["CreateOu"])
                     </h3>
                     <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
                 </div>
                 <div class="space-y-4 py-4">
                     <div>
-                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">部门名称</label>
-                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createDisplayName" placeholder="例如：精密加工一车间" />
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["DepartmentName"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createDisplayName" placeholder="e.g. Assembly Workshop" />
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">部门负责人 (Manager)</label>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Manager"]</label>
                         <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createManagerId">
-                            <option value="">(暂不指定主管)</option>
+                            <option value="">(@L["Unspecified"])</option>
                             @foreach (var user in _allUsers)
                             {
                                 <option value="@user.Id">@user.Name (@user.Email)</option>
@@ -198,17 +187,17 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">主管层级 (Level)</label>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Level"]</label>
                         <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createManagerLevel">
-                            <option value="1">Level 1 - 部门一级主管 (Department Head)</option>
-                            <option value="2">Level 2 - 车间/组室主管 (Supervisor)</option>
-                            <option value="3">Level 3 - 产线班组长 (Team Leader)</option>
+                            <option value="1">@L["Level1"]</option>
+                            <option value="2">@L["Level2"]</option>
+                            <option value="3">@L["Level3"]</option>
                         </select>
                     </div>
                 </div>
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
-                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">取消</button>
-                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="CreateOuAsync">保存创建</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="CreateOuAsync">@L["Save"]</button>
                 </div>
             </div>
         </div>
@@ -223,9 +212,8 @@
                     <div>
                         <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
                             <LucideIcon Name="ShieldCheck" Class="w-5 h-5 text-primary" />
-                            <span>角色授权分发 - @_selectedOu.DisplayName</span>
+                            <span>@L["AssignRoles"] - @_selectedOu.DisplayName</span>
                         </h3>
-                        <p class="text-xs text-[#888ea8] mt-0.5">选择授权目标与角色，系统将根据策略执行批量授予</p>
                     </div>
                     <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
                 </div>
@@ -233,34 +221,34 @@
                 <div class="space-y-4 py-4">
                     <!-- Target Strategy Choice -->
                     <div>
-                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-2">授权目标策略</label>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-2">@L["TargetStrategy"]</label>
                         <div class="space-y-2">
                             <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 dark:border-[#191e3a] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121e32]">
                                 <input type="radio" name="assignMode" value="CurrentOu" checked="@(_assignMode == "CurrentOu")" @onchange="@(() => _assignMode = "CurrentOu")" class="text-primary" />
                                 <div>
-                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">仅赋予当前部门 (OU Role)</div>
-                                    <div class="text-[11px] text-[#888ea8]">为本组织单元直接分配角色</div>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">@L["StrategyCurrentOu"]</div>
+                                    <div class="text-[11px] text-[#888ea8]">@L["StrategyCurrentOuDesc"]</div>
                                 </div>
                             </label>
                             <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 dark:border-[#191e3a] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121e32]">
                                 <input type="radio" name="assignMode" value="ChildrenOu" checked="@(_assignMode == "ChildrenOu")" @onchange="@(() => _assignMode = "ChildrenOu")" class="text-primary" />
                                 <div>
-                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">级联赋予本部门及所有子部门 (Children OU Roles)</div>
-                                    <div class="text-[11px] text-[#888ea8]">下属所有车间、科室同步获得该角色</div>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">@L["StrategyChildrenOu"]</div>
+                                    <div class="text-[11px] text-[#888ea8]">@L["StrategyChildrenOuDesc"]</div>
                                 </div>
                             </label>
                             <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 dark:border-[#191e3a] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121e32]">
                                 <input type="radio" name="assignMode" value="Manager" checked="@(_assignMode == "Manager")" @onchange="@(() => _assignMode = "Manager")" class="text-primary" />
                                 <div>
-                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">仅赋予当前部门主管经理 (Manager Role)</div>
-                                    <div class="text-[11px] text-[#888ea8]">自动赋予负责人: @(_selectedOu.ManagerName ?? "未指定")</div>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">@L["StrategyManager"]</div>
+                                    <div class="text-[11px] text-[#888ea8]">@L["StrategyManagerDesc"]: @(_selectedOu.ManagerName ?? L["Unspecified"])</div>
                                 </div>
                             </label>
                             <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 dark:border-[#191e3a] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121e32]">
                                 <input type="radio" name="assignMode" value="ChildrenManagers" checked="@(_assignMode == "ChildrenManagers")" @onchange="@(() => _assignMode = "ChildrenManagers")" class="text-primary" />
                                 <div>
-                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">级联批量赋予所有子部门主管经理 (Children Managers)</div>
-                                    <div class="text-[11px] text-[#888ea8]">自动遍历并赋权下属所有车间/班组的负责人账号</div>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">@L["StrategyChildrenManagers"]</div>
+                                    <div class="text-[11px] text-[#888ea8]">@L["StrategyChildrenManagersDesc"]</div>
                                 </div>
                             </label>
                         </div>
@@ -268,11 +256,11 @@
 
                     <!-- Roles Multi-select Checkboxes -->
                     <div>
-                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-2">选择赋予的角色</label>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-2">@L["SelectRoles"]</label>
                         <div class="max-h-48 overflow-y-auto space-y-1.5 p-2 rounded-xl bg-[#f6f8fa] dark:bg-[#121e32]">
                             @if (!_allRoles.Any())
                             {
-                                <div class="py-4 text-center text-xs text-[#888ea8]">暂无可选角色</div>
+                                <div class="py-4 text-center text-xs text-[#888ea8]">@L["NoData"]</div>
                             }
                             else
                             {
@@ -293,11 +281,11 @@
 
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#191e3a]">
                     <div class="text-xs text-[#888ea8]">
-                        已选 <span class="font-bold text-primary">@_selectedRoleIds.Count</span> 个角色
+                        @L["SelectedCount"]: <span class="font-bold text-primary">@_selectedRoleIds.Count</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">取消</button>
-                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="ExecuteRoleAssignmentAsync">执行授权分发</button>
+                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="ExecuteRoleAssignmentAsync">@L["ExecuteAssign"]</button>
                     </div>
                 </div>
             </div>

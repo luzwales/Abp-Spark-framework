@@ -24,10 +24,10 @@ public class DashboardAppService : ApplicationService, IDashboardAppService
             SystemOeePercentage = 87.5,
             Cards = new List<KpiCardDto>
             {
-                new() { Title = "注册用户总数", Value = $"{userCount} 人", Badge = "+12% 环比", Icon = "Users" },
-                new() { Title = "制造在制品工单 (WIP)", Value = "128 单", Badge = "正常排产", Icon = "Boxes" },
-                new() { Title = "车间综合效率 (OEE)", Value = "87.5%", Badge = "达到目标", Icon = "Activity" },
-                new() { Title = "系统服务状态", Value = "100% 正常", Badge = "ABP vNext", Icon = "Server" }
+                new() { Title = "RegisteredUsers", Value = $"{userCount}", Badge = "Live", Icon = "Users" },
+                new() { Title = "WipWorkOrders", Value = "128", Badge = "Online", Icon = "Boxes" },
+                new() { Title = "WorkshopOee", Value = "87.5%", Badge = "TargetMet", Icon = "Activity" },
+                new() { Title = "SystemStatus", Value = "100%", Badge = "Healthy", Icon = "Server" }
             }
         };
     }

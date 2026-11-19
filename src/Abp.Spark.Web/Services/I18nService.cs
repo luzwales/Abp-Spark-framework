@@ -11,7 +11,7 @@ public class I18nService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IHostEnvironment _env;
 
-    public const string DefaultLocale = "zh";
+    public const string DefaultLocale = "en";
     public const string CookieName = "spark_locale";
 
     public I18nService(IHttpContextAccessor httpContextAccessor, IHostEnvironment env)
@@ -29,12 +29,12 @@ public class I18nService
         var culture = CurrentCulture;
         var dict = LoadTranslations(culture);
 
-        if (!dict.TryGetValue(key, out var val))
+        if (!TryLookup(dict, key, out var val))
         {
             if (!string.Equals(culture, DefaultLocale, StringComparison.OrdinalIgnoreCase))
             {
                 var defaultDict = LoadTranslations(DefaultLocale);
-                if (defaultDict.TryGetValue(key, out val))
+                if (TryLookup(defaultDict, key, out val))
                 {
                     return args.Length > 0 ? string.Format(val, args) : val;
                 }
@@ -43,6 +43,24 @@ public class I18nService
         }
 
         return args.Length > 0 ? string.Format(val, args) : val;
+    }
+
+    private static bool TryLookup(Dictionary<string, string> dict, string key, out string val)
+    {
+        if (dict.TryGetValue(key, out val!))
+        {
+            return true;
+        }
+        foreach (var kv in dict)
+        {
+            if (string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase))
+            {
+                val = kv.Value;
+                return true;
+            }
+        }
+        val = string.Empty;
+        return false;
     }
 
     public string CurrentCulture
@@ -82,7 +100,7 @@ public class I18nService
                     });
                     if (dict != null)
                     {
-                        return new Dictionary<string, string>(dict, StringComparer.OrdinalIgnoreCase);
+                        return dict;
                     }
                 }
             }
@@ -91,7 +109,7 @@ public class I18nService
                 // Fallback
             }
 
-            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            return new Dictionary<string, string>(StringComparer.Ordinal);
         });
     }
 }
