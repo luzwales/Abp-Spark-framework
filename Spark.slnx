@@ -1,8 +1,7 @@
 <Solution>
-  <Project Path="Spark.Console/Spark.Console.csproj" />
-  <Project Path="Spark.Library/Spark.Library.csproj" />
-  <Project Path="Spark.Templates/working/Spark.Templates.csproj" />
-  <Project Path="Spark.Templates/working/templates/Spark.Templates.Blazor/Spark.Templates.Blazor.csproj" />
-  <Project Path="Spark.Templates/working/templates/Spark.Templates.Razor/Spark.Templates.Razor.csproj" />
-  <Project Path="Spark.Tests/Spark.Tests.csproj" />
+  <Project Path="Abp.Spark.Console/Abp.Spark.Console.csproj" />
+  <Project Path="Abp.Spark.Library/Abp.Spark.Library.csproj" />
+  <Project Path="Abp.Spark.Templates/working/Abp.Spark.Templates.csproj" />
+  <Project Path="Abp.Spark.Templates/working/templates/Spark.Templates.Razor/Spark.Templates.Razor.csproj" />
+  <Project Path="Abp.Spark.Tests/Abp.Spark.Tests.csproj" />
 </Solution>

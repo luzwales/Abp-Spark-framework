@@ -1,19 +1,17 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spark.Console", "Spark.Console\Spark.Console.csproj", "{9FD51892-5808-40C3-8A35-5E5DFDEBF137}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Abp.Spark.Console", "Abp.Spark.Console\Abp.Spark.Console.csproj", "{9FD51892-5808-40C3-8A35-5E5DFDEBF137}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spark.Templates", "Spark.Templates\working\Spark.Templates.csproj", "{EBCAEB07-776E-4B11-B6E0-6CAB980EACC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Abp.Spark.Templates", "Abp.Spark.Templates\working\Abp.Spark.Templates.csproj", "{EBCAEB07-776E-4B11-B6E0-6CAB980EACC3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spark.Library", "Spark.Library\Spark.Library.csproj", "{C776F588-4FAB-4D42-A4EE-0F094BDB0DD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Abp.Spark.Library", "Abp.Spark.Library\Abp.Spark.Library.csproj", "{C776F588-4FAB-4D42-A4EE-0F094BDB0DD7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spark.Tests", "Spark.Tests\Spark.Tests.csproj", "{2161116D-BBFD-45A7-81B4-D62DD0371EA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Abp.Spark.Tests", "Abp.Spark.Tests\Abp.Spark.Tests.csproj", "{2161116D-BBFD-45A7-81B4-D62DD0371EA4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spark.Templates.Razor", "Spark.Templates\working\templates\Spark.Templates.Razor\Spark.Templates.Razor.csproj", "{B344AFF3-33AA-4F3D-BB17-DC40A5257D8E}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spark.Templates.Blazor", "Spark.Templates\working\templates\Spark.Templates.Blazor\Spark.Templates.Blazor.csproj", "{32A62401-E9E5-4F6C-8475-BD4E745F1247}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spark.Templates.Razor", "Abp.Spark.Templates\working\templates\Spark.Templates.Razor\Spark.Templates.Razor.csproj", "{B344AFF3-33AA-4F3D-BB17-DC40A5257D8E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

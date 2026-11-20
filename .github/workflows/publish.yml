@@ -44,9 +44,9 @@ jobs:
         shell: bash
         run: |
           if grep -q '<PackageId>Spark\.' \
-               Spark.Library/Spark.Library.csproj \
-               Spark.Console/Spark.Console.csproj \
-               Spark.Templates/working/Spark.Templates.csproj; then
+               Abp.Spark.Library/Abp.Spark.Library.csproj \
+               Abp.Spark.Console/Abp.Spark.Console.csproj \
+               Abp.Spark.Templates/working/Abp.Spark.Templates.csproj; then
             echo "::error::PackageId still uses the upstream Spark.* IDs. You are not the owner of those packages on nuget.org, so the push would be rejected with 403. Rename the package IDs first."
             exit 1
           fi
@@ -55,11 +55,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$PACK_DIR"
-          dotnet pack Spark.Library/Spark.Library.csproj \
+          dotnet pack Abp.Spark.Library/Abp.Spark.Library.csproj \
             -c Release -o "$PACK_DIR" -p:PackageVersion="$PKG_VERSION"
-          dotnet pack Spark.Console/Spark.Console.csproj \
+          dotnet pack Abp.Spark.Console/Abp.Spark.Console.csproj \
             -c Release -o "$PACK_DIR" -p:PackageVersion="$PKG_VERSION"
-          dotnet pack Spark.Templates/working/Spark.Templates.csproj \
+          dotnet pack Abp.Spark.Templates/working/Abp.Spark.Templates.csproj \
             -c Release -o "$PACK_DIR" -p:PackageVersion="$PKG_VERSION"
 
       - name: Verify packages

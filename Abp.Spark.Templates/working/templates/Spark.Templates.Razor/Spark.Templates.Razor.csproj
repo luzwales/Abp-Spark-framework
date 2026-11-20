@@ -30,11 +30,11 @@
 	     instantiated with `dotnet new`, the path below does not exist and the published
 	     Spark.Library package is used instead (Spark.Library 2.0.0 is the first net10 build and
 	     must be published alongside Spark.Templates). -->
-	<ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\..\Spark.Library\Spark.Library.csproj')">
-		<ProjectReference Include="..\..\..\..\Spark.Library\Spark.Library.csproj" />
+	<ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\..\Abp.Spark.Library\Abp.Spark.Library.csproj')">
+		<ProjectReference Include="..\..\..\..\Abp.Spark.Library\Abp.Spark.Library.csproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition="!Exists('$(MSBuildThisFileDirectory)..\..\..\..\Spark.Library\Spark.Library.csproj')">
+	<ItemGroup Condition="!Exists('$(MSBuildThisFileDirectory)..\..\..\..\Abp.Spark.Library\Abp.Spark.Library.csproj')">
 		<PackageReference Include="Abp.Spark.Library" Version="2.0.0" />
 	</ItemGroup>
 
