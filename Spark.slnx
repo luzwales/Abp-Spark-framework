@@ -1,7 +1,5 @@
 <Solution>
   <Project Path="Abp.Spark.Console/Abp.Spark.Console.csproj" />
-  <Project Path="Abp.Spark.Library/Abp.Spark.Library.csproj" />
   <Project Path="Abp.Spark.Templates/working/Abp.Spark.Templates.csproj" />
-  <Project Path="Abp.Spark.Templates/working/templates/Spark.Templates.Razor/Spark.Templates.Razor.csproj" />
   <Project Path="Abp.Spark.Tests/Abp.Spark.Tests.csproj" />
 </Solution>

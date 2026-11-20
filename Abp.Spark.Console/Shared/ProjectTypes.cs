@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,13 +16,10 @@ public class ProjectTypes
 	public static bool IsValid(string template)
 	{
 		if (template == blazor) return true;
-		if (template == razor) return true;
 		return false;
 	}
 	public static string TranslateProjectTypeToTemplate(string projectType)
 	{
-		if (projectType == blazor) return "sparkblazor";
-		if (projectType == razor) return "sparkrazor";
 		return "sparkblazor";
 	}
 }

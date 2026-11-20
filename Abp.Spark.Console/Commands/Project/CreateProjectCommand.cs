@@ -25,7 +25,7 @@ public class CreateProjectCommand
 		{
 			if (!ProjectTypes.IsValid(projectType))
 			{
-				ConsoleOutput.ErrorAlert(new List<string>() { $"Invalid project type. Valid values: blazor, api" });
+				ConsoleOutput.ErrorAlert(new List<string>() { $"Invalid project type. Valid values: blazor" });
 				return;
 			}
 			template = ProjectTypes.TranslateProjectTypeToTemplate(projectType);

@@ -15,16 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove=".env" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include=".env">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="4.5.3" />
     <PackageReference Include="MSTest.TestFramework" Version="4.5.3" />
@@ -32,12 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Storage\Logging\" />
-    <Folder Include="Storage\Mail\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Abp.Spark.Library\Abp.Spark.Library.csproj" />
+    <ProjectReference Include="..\Abp.Spark.Console\Abp.Spark.Console.csproj" />
   </ItemGroup>
 
 </Project>

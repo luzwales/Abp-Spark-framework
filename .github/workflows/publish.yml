@@ -44,7 +44,6 @@ jobs:
         shell: bash
         run: |
           if grep -q '<PackageId>Spark\.' \
-               Abp.Spark.Library/Abp.Spark.Library.csproj \
                Abp.Spark.Console/Abp.Spark.Console.csproj \
                Abp.Spark.Templates/working/Abp.Spark.Templates.csproj; then
             echo "::error::PackageId still uses the upstream Spark.* IDs. You are not the owner of those packages on nuget.org, so the push would be rejected with 403. Rename the package IDs first."
@@ -55,8 +54,6 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$PACK_DIR"
-          dotnet pack Abp.Spark.Library/Abp.Spark.Library.csproj \
-            -c Release -o "$PACK_DIR" -p:PackageVersion="$PKG_VERSION"
           dotnet pack Abp.Spark.Console/Abp.Spark.Console.csproj \
             -c Release -o "$PACK_DIR" -p:PackageVersion="$PKG_VERSION"
           dotnet pack Abp.Spark.Templates/working/Abp.Spark.Templates.csproj \
@@ -67,8 +64,8 @@ jobs:
         run: |
           ls -l "$PACK_DIR"
           count=$(find "$PACK_DIR" -maxdepth 1 -name '*.nupkg' | wc -l)
-          if [ "$count" -ne 3 ]; then
-            echo "::error::Expected 3 .nupkg files, found $count"
+          if [ "$count" -ne 2 ]; then
+            echo "::error::Expected 2 .nupkg files, found $count"
             exit 1
           fi
 
