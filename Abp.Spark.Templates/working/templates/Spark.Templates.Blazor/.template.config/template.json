@@ -9,7 +9,6 @@
         "language": "C#",
         "type": "project"
     },
-    "sourceName": "Abp.Spark",
     "preferNameDirectory": true,
     "symbols": {
         "CustomerName": {
@@ -23,6 +22,32 @@
             "dataType": "string",
             "defaultValue": "Spark",
             "description": "Project name (e.g. Shop)"
+        },
+        "FullNamespace": {
+            "type": "generated",
+            "generator": "join",
+            "parameters": {
+                "symbols": [
+                    { "type": "ref", "value": "CustomerName" },
+                    { "type": "ref", "value": "ProjectName" }
+                ],
+                "separator": "."
+            },
+            "replaces": "Abp.Spark",
+            "fileRename": "Abp.Spark"
+        },
+        "CompactPrefix": {
+            "type": "generated",
+            "generator": "join",
+            "parameters": {
+                "symbols": [
+                    { "type": "ref", "value": "CustomerName" },
+                    { "type": "ref", "value": "ProjectName" }
+                ],
+                "separator": ""
+            },
+            "replaces": "AbpSpark",
+            "fileRename": "AbpSpark"
         },
         "DbProvider": {
             "type": "parameter",
@@ -46,7 +71,35 @@
                 }
             ],
             "defaultValue": "SqlServer",
-            "description": "Database provider"
+            "description": "Database provider",
+            "replaces": "SqlServer"
+        },
+        "DefaultConnection": {
+            "type": "generated",
+            "generator": "switch",
+            "replaces": "Server=(localdb)\\\\mssqllocaldb;Database=AbpSparkCoreDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True",
+            "parameters": {
+                "evaluator": "C++",
+                "datatype": "string",
+                "cases": [
+                    {
+                        "condition": "(DbProvider == 'PostgreSql')",
+                        "value": "Host=localhost;Database=AbpSparkDb;Username=postgres;Password=your_password"
+                    },
+                    {
+                        "condition": "(DbProvider == 'MySql')",
+                        "value": "Server=localhost;Database=AbpSparkDb;User=root;Password=your_password;"
+                    },
+                    {
+                        "condition": "(DbProvider == 'Sqlite')",
+                        "value": "Data Source=Storage/abp_spark.db"
+                    },
+                    {
+                        "condition": "(DbProvider == 'SqlServer')",
+                        "value": "Server=(localdb)\\\\mssqllocaldb;Database=AbpSparkCoreDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+                    }
+                ]
+            }
         }
     },
     "sources": [

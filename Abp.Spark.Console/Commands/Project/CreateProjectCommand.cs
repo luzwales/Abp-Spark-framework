@@ -32,16 +32,29 @@ public class CreateProjectCommand
 		}
 
 		var args = new StringBuilder();
-		args.Append($"new {template} -n {projectName} -o {projectName}");
+		args.Append($"new {template} -o {projectName}");
 		
 		if (!string.IsNullOrEmpty(customerName))
 		{
-			args.Append($" --customer {customerName}");
+			args.Append($" --CustomerName {customerName}");
+		}
+
+		if (!string.IsNullOrEmpty(projectName))
+		{
+			args.Append($" --ProjectName {projectName}");
 		}
 		
 		if (!string.IsNullOrEmpty(dbProvider))
 		{
-			args.Append($" --db {dbProvider}");
+			// Normalize dbProvider casing: SqlServer, PostgreSql, MySql, Sqlite
+			var normalizedDb = dbProvider.Trim().ToLowerInvariant() switch
+			{
+				"postgresql" or "postgres" or "npgsql" => "PostgreSql",
+				"mysql" => "MySql",
+				"sqlite" => "Sqlite",
+				_ => "SqlServer"
+			};
+			args.Append($" --DbProvider {normalizedDb}");
 		}
 
 		var command = args.ToString();

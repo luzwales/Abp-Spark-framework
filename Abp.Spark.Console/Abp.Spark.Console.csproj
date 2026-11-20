@@ -6,7 +6,7 @@
 	<PackAsTool>true</PackAsTool>
 	<ToolCommandName>spark</ToolCommandName>
 	<PackageOutputPath>./nupkg</PackageOutputPath>
-	<PackageVersion>2.0.0</PackageVersion>
+	<PackageVersion>2.0.1</PackageVersion>
 	<PackageId>Abp.Spark.CLI</PackageId>
 	<Title>Abp.Spark.NET CLI</Title>
 	<Authors>Andrew Lu</Authors>
