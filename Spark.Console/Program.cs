@@ -1,4 +1,4 @@
-﻿using Spark.Console.Commands;
+using Spark.Console.Commands;
 using Spark.Console.Commands.Events;
 using Spark.Console.Commands.Mail;
 using Spark.Console.Commands.Migrations;
@@ -55,19 +55,16 @@ class Program
 
         app.Command("new", config =>
         {
-            config.OnExecute(() =>
-            {
-                config.ShowHelp();
-                return 1;
-            });
-
             config.Description = "Create a new Spark project.";
             var projectName = config.Argument<string>("name", "Name of the project to generate.");
             var projectType = config.Option("-t|--type <ProjectType>", "Project type of the new Spark project", CommandOptionType.SingleValue);
+            var customerName = config.Option("-c|--customer <CustomerName>", "Customer name for the project", CommandOptionType.SingleValue);
+            var dbProvider = config.Option("-d|--db <DbProvider>", "Database provider for the project", CommandOptionType.SingleValue);
+            
             config.OnExecute(() =>
             {
                 string project = projectName.Value ?? null;
-                new CreateProjectCommand().Execute(project, projectType.Value());
+                new CreateProjectCommand().Execute(project, projectType.Value(), customerName.Value(), dbProvider.Value());
             });
         });
 

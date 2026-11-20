@@ -11,6 +11,26 @@
         "language": "C#",
         "type": "project"
     },
+    "symbols": {
+        "CustomerName": {
+            "type": "parameter",
+            "dataType": "string",
+            "defaultValue": "Abp",
+            "description": "The customer name for the project namespace."
+        },
+        "ProjectName": {
+            "type": "parameter",
+            "dataType": "string",
+            "defaultValue": "Spark",
+            "description": "The project name for the project namespace."
+        },
+        "DbProvider": {
+            "type": "parameter",
+            "dataType": "string",
+            "defaultValue": "SqlServer",
+            "description": "Database provider: SqlServer, PostgreSql, MySql, Sqlite"
+        }
+    },
     "sources": [
         {
             "modifiers": [

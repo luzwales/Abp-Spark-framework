@@ -1,4 +1,4 @@
-﻿using Spark.Console.Shared;
+using Spark.Console.Shared;
 using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ public class CreateProjectCommand
 {
 	private readonly static string ProjectPath = $"./";
 
-	public void Execute(string projectName, string projectType)
+	public void Execute(string projectName, string projectType, string customerName, string dbProvider)
 	{
 		if (String.IsNullOrEmpty(projectName))
 		{
@@ -30,7 +30,21 @@ public class CreateProjectCommand
 			}
 			template = ProjectTypes.TranslateProjectTypeToTemplate(projectType);
 		}
-		var command = $"new {template} -n {projectName} -o {projectName}";
+
+		var args = new StringBuilder();
+		args.Append($"new {template} -n {projectName} -o {projectName}");
+		
+		if (!string.IsNullOrEmpty(customerName))
+		{
+			args.Append($" --customer {customerName}");
+		}
+		
+		if (!string.IsNullOrEmpty(dbProvider))
+		{
+			args.Append($" --db {dbProvider}");
+		}
+
+		var command = args.ToString();
 		ConsoleOutput.StartAlert(new List<string>() { $"Creating a Spark project at \"./{projectName}\"" });
 		Process.Start("dotnet", command).WaitForExit();
 		ConsoleOutput.SuccessAlert(new List<string>() {
