@@ -1,0 +1,548 @@
+@page "/organization-units"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@inject IOrganizationUnitAppService OuAppService
+@inject IRoleAppService RoleAppService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@L["OrganizationUnits"]</PageTitle>
+
+<section class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="Network" Class="w-7 h-7 text-primary" />
+            <span>@L["OrganizationUnits"]</span>
+        </h1>
+
+        <div class="flex items-center gap-2">
+            <button type="button"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                    title="@L["CreateOu"]"
+                    @onclick="() => OpenCreateModal(null)">
+                <LucideIcon Name="Plus" Class="w-4 h-4" />
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Grid: Left Tree Navigation, Right Detail & Role Management -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Organization Tree -->
+        <div class="lg:col-span-5 card bg-white dark:bg-[#0e1726] rounded-2xl p-5 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#191e3a]">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#0e1726] dark:text-white">@L["OrgTree"]</h3>
+                <span class="text-[11px] text-[#888ea8] font-mono">@L["Total"]: @_allOusCount</span>
+            </div>
+
+            @if (_isLoading)
+            {
+                <div class="py-12 text-center text-xs text-[#888ea8]">@L["Loading"]</div>
+            }
+            else if (!_ouTree.Any())
+            {
+                <div class="py-12 text-center text-xs text-[#888ea8]">@L["NoData"]</div>
+            }
+            else
+            {
+                <div class="space-y-1">
+                    @foreach (var node in _ouTree)
+                    {
+                        @RenderTreeNode(node, 0)
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Right: Selected OU Details & Role Assignment Operations -->
+        <div class="lg:col-span-7 space-y-6">
+            @if (_selectedOu == null)
+            {
+                <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-12 text-center shadow-sm">
+                    <LucideIcon Name="Network" Class="w-12 h-12 mx-auto text-[#888ea8] opacity-40 mb-3" />
+                    <p class="text-xs font-semibold text-[#888ea8]">@L["SelectOuHint"]</p>
+                </div>
+            }
+            else
+            {
+                <!-- Selected OU Info Card -->
+                <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-6 shadow-sm space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-xs px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">@_selectedOu.Code</span>
+                                <h2 class="text-lg font-bold text-[#0e1726] dark:text-white">@_selectedOu.DisplayName</h2>
+                            </div>
+                            <div class="text-xs text-[#888ea8] mt-1 flex items-center gap-4">
+                                <span>@L["Manager"]: <strong class="text-[#0e1726] dark:text-white">@(_selectedOu.ManagerName ?? L["Unspecified"])</strong></span>
+                                <span>@L["Level"]: <strong class="text-primary font-bold">L@(_selectedOu.ManagerLevel ?? 1)</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <button type="button"
+                                    class="w-7 h-7 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                                    title="@L["AddChildOu"]"
+                                    @onclick="() => OpenCreateModal(_selectedOu.Id)">
+                                <LucideIcon Name="Plus" Class="w-3.5 h-3.5" />
+                            </button>
+                            <button type="button"
+                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-warning hover:bg-warning/10 transition cursor-pointer"
+                                    title="@L["AssignRoles"]"
+                                    @onclick="OpenAssignRoleModal">
+                                <LucideIcon Name="ShieldCheck" Class="w-3.5 h-3.5" />
+                            </button>
+                            <button type="button"
+                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                                    title="@L["Delete"]"
+                                    @onclick="() => DeleteOuAsync(_selectedOu.Id)">
+                                <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Role Assignment Cards Section -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#0e1726] dark:text-white">
+                                @L["DirectRoles"] (@_ouRoles.Count)
+                            </h4>
+                        </div>
+
+                        @if (!_ouRoles.Any())
+                        {
+                            <div class="p-6 rounded-xl border border-dashed border-gray-200 dark:border-[#191e3a] text-center text-xs text-[#888ea8]">
+                                @L["NoDirectRolesHint"]
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                @foreach (var role in _ouRoles)
+                                {
+                                    <div class="p-3.5 rounded-xl bg-[#f8f9fa] dark:bg-[#121e32] flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                                                <LucideIcon Name="ShieldCheck" Class="w-3.5 h-3.5 text-primary" />
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-bold text-[#0e1726] dark:text-white">@role.Name</div>
+                                                <div class="text-[10px] text-[#888ea8]">@L["EffectiveForMembers"]</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- Quick Role Distribution Action Tiles -->
+                        <div class="pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#888ea8] mb-3">
+                                @L["QuickPoliciesTitle"]
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="p-3.5 rounded-xl border border-gray-100 dark:border-[#191e3a] bg-white dark:bg-[#0e1726] hover:border-primary/50 transition">
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["PolicyChildrenTitle"]</div>
+                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">@L["PolicyChildrenDesc"]</p>
+                                </div>
+                                <div class="p-3.5 rounded-xl border border-gray-100 dark:border-[#191e3a] bg-white dark:bg-[#0e1726] hover:border-primary/50 transition">
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["PolicyManagerTitle"]</div>
+                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">@L["PolicyManagerDesc"]</p>
+                                </div>
+                                <div class="p-3.5 rounded-xl border border-gray-100 dark:border-[#191e3a] bg-white dark:bg-[#0e1726] hover:border-primary/50 transition">
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["PolicyChildrenManagersTitle"]</div>
+                                    <p class="text-[11px] text-[#888ea8] leading-relaxed">@L["PolicyChildrenManagersDesc"]</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Create OU Modal -->
+    @if (_showCreateModal)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white">
+                        @(_createParentId.HasValue ? L["CreateChildOu"] : L["CreateOu"])
+                    </h3>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+                <div class="space-y-4 py-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["DepartmentName"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createDisplayName" placeholder="e.g. Assembly Workshop" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Manager"]</label>
+                        <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createManagerId">
+                            <option value="">(@L["Unspecified"])</option>
+                            @foreach (var user in _allUsers)
+                            {
+                                <option value="@user.Id">@user.Name (@user.Email)</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Level"]</label>
+                        <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createManagerLevel">
+                            <option value="1">@L["Level1"]</option>
+                            <option value="2">@L["Level2"]</option>
+                            <option value="3">@L["Level3"]</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="CreateOuAsync">@L["Save"]</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Advanced Role Assignment Modal -->
+    @if (_showAssignRoleModal && _selectedOu != null)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-lg shadow-xl animate-fade-in">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <div>
+                        <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
+                            <LucideIcon Name="ShieldCheck" Class="w-5 h-5 text-primary" />
+                            <span>@L["AssignRoles"] - @_selectedOu.DisplayName</span>
+                        </h3>
+                    </div>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+
+                <div class="space-y-4 py-4">
+                    <!-- Target Strategy Choice -->
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-2">@L["TargetStrategy"]</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 dark:border-[#191e3a] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121e32]">
+                                <input type="radio" name="assignMode" value="CurrentOu" checked="@(_assignMode == "CurrentOu")" @onchange="@(() => _assignMode = "CurrentOu")" class="text-primary" />
+                                <div>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">@L["StrategyCurrentOu"]</div>
+                                    <div class="text-[11px] text-[#888ea8]">@L["StrategyCurrentOuDesc"]</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 dark:border-[#191e3a] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121e32]">
+                                <input type="radio" name="assignMode" value="ChildrenOu" checked="@(_assignMode == "ChildrenOu")" @onchange="@(() => _assignMode = "ChildrenOu")" class="text-primary" />
+                                <div>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">@L["StrategyChildrenOu"]</div>
+                                    <div class="text-[11px] text-[#888ea8]">@L["StrategyChildrenOuDesc"]</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 dark:border-[#191e3a] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121e32]">
+                                <input type="radio" name="assignMode" value="Manager" checked="@(_assignMode == "Manager")" @onchange="@(() => _assignMode = "Manager")" class="text-primary" />
+                                <div>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">@L["StrategyManager"]</div>
+                                    <div class="text-[11px] text-[#888ea8]">@L["StrategyManagerDesc"]: @(_selectedOu.ManagerName ?? L["Unspecified"])</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 dark:border-[#191e3a] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121e32]">
+                                <input type="radio" name="assignMode" value="ChildrenManagers" checked="@(_assignMode == "ChildrenManagers")" @onchange="@(() => _assignMode = "ChildrenManagers")" class="text-primary" />
+                                <div>
+                                    <div class="text-xs font-bold text-[#0e1726] dark:text-white">@L["StrategyChildrenManagers"]</div>
+                                    <div class="text-[11px] text-[#888ea8]">@L["StrategyChildrenManagersDesc"]</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Roles Multi-select Checkboxes -->
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-2">@L["SelectRoles"]</label>
+                        <div class="max-h-48 overflow-y-auto space-y-1.5 p-2 rounded-xl bg-[#f6f8fa] dark:bg-[#121e32]">
+                            @if (!_allRoles.Any())
+                            {
+                                <div class="py-4 text-center text-xs text-[#888ea8]">@L["NoData"]</div>
+                            }
+                            else
+                            {
+                                @foreach (var r in _allRoles)
+                                {
+                                    <label class="flex items-center gap-2 text-xs text-[#0e1726] dark:text-white p-1 hover:text-primary cursor-pointer">
+                                        <input type="checkbox"
+                                               class="rounded text-primary"
+                                               checked="@_selectedRoleIds.Contains(r.Id)"
+                                               onchange="@(() => ToggleSelectedRole(r.Id))" />
+                                        <span>@r.Name</span>
+                                    </label>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <div class="text-xs text-[#888ea8]">
+                        @L["SelectedCount"]: <span class="font-bold text-primary">@_selectedRoleIds.Count</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="ExecuteRoleAssignmentAsync">@L["ExecuteAssign"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private List<OrganizationUnitTreeDto> _ouTree = new();
+    private List<IdentityRoleDto> _allRoles = new();
+    private List<UserDto> _allUsers = new();
+    private int _allOusCount = 0;
+    private bool _isLoading = true;
+
+    private OrganizationUnitTreeDto? _selectedOu;
+    private List<IdentityRoleDto> _ouRoles = new();
+    private readonly HashSet<Guid> _expandedNodeIds = new();
+
+    private bool _showCreateModal = false;
+    private Guid? _createParentId;
+    private string _createDisplayName = string.Empty;
+    private Guid? _createManagerId;
+    private int _createManagerLevel = 1;
+
+    private bool _showAssignRoleModal = false;
+    private string _assignMode = "CurrentOu";
+    private readonly HashSet<Guid> _selectedRoleIds = new();
+
+    [Inject] public IUserAppService UserAppService { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    private async Task LoadAllDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _ouTree = await OuAppService.GetTreeAsync();
+            _allOusCount = CountTreeNodes(_ouTree);
+
+            // 默认展开所有一级节点
+            foreach (var node in _ouTree)
+            {
+                _expandedNodeIds.Add(node.Id);
+            }
+
+            if (_ouTree.Any() && _selectedOu == null)
+            {
+                await SelectOuAsync(_ouTree.First());
+            }
+
+            var rolesResult = await RoleAppService.AllListAsync();
+            _allRoles = rolesResult.Items?.ToList() ?? new();
+
+            _allUsers = await UserAppService.GetListAsync();
+        }
+        catch
+        {
+            _ouTree = new();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task SelectOuAsync(OrganizationUnitTreeDto ou)
+    {
+        _selectedOu = ou;
+        try
+        {
+            _ouRoles = await OuAppService.GetRolesAsync(ou.Id);
+        }
+        catch
+        {
+            _ouRoles = new();
+        }
+    }
+
+    private void ToggleExpand(Guid id)
+    {
+        if (_expandedNodeIds.Contains(id))
+            _expandedNodeIds.Remove(id);
+        else
+            _expandedNodeIds.Add(id);
+    }
+
+    private RenderFragment RenderTreeNode(OrganizationUnitTreeDto node, int level) => __builder =>
+    {
+        var isSelected = _selectedOu?.Id == node.Id;
+        var hasChildren = node.Children.Any();
+        var isExpanded = _expandedNodeIds.Contains(node.Id);
+
+        <div class="space-y-1">
+            <div class="flex items-center justify-between p-2 rounded-xl transition-colors @(isSelected ? "bg-primary/10 text-primary font-bold" : "hover:bg-[#f6f8fa] dark:hover:bg-[#121e32] text-[#0e1726] dark:text-white")"
+                 style="padding-left: @(level * 16 + 8)px;">
+                <div class="flex items-center gap-2 truncate cursor-pointer flex-1" @onclick="() => SelectOuAsync(node)">
+                    @if (hasChildren)
+                    {
+                        <button type="button" class="w-4 h-4 flex items-center justify-center text-[#888ea8] hover:text-primary" @onclick="() => ToggleExpand(node.Id)" onclick:stopPropagation="true">
+                            <LucideIcon Name="@(isExpanded ? "ChevronDown" : "ChevronRight")" Class="w-3.5 h-3.5" />
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="w-4 h-4"></span>
+                    }
+
+                    <LucideIcon Name="Network" Class="w-4 h-4 shrink-0 text-primary" />
+                    <span class="text-xs truncate">@node.DisplayName</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(node.ManagerName))
+                {
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#191e3a] text-[#888ea8] shrink-0 font-normal">
+                        @node.ManagerName
+                    </span>
+                }
+            </div>
+
+            @if (hasChildren && isExpanded)
+            {
+                <div class="space-y-1">
+                    @foreach (var child in node.Children)
+                    {
+                        @RenderTreeNode(child, level + 1)
+                    }
+                </div>
+            }
+        </div>
+    };
+
+    private void OpenCreateModal(Guid? parentId)
+    {
+        _createParentId = parentId;
+        _createDisplayName = string.Empty;
+        _createManagerId = null;
+        _createManagerLevel = 1;
+        _showCreateModal = true;
+    }
+
+    private async Task CreateOuAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_createDisplayName)) return;
+
+        try
+        {
+            await OuAppService.CreateAsync(new CreateOrganizationUnitInput
+            {
+                DisplayName = _createDisplayName,
+                ParentId = _createParentId,
+                ManagerId = _createManagerId,
+                ManagerLevel = _createManagerLevel
+            });
+
+            CloseModal();
+            await LoadAllDataAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task DeleteOuAsync(Guid id)
+    {
+        try
+        {
+            await OuAppService.DeleteAsync(id);
+            _selectedOu = null;
+            await LoadAllDataAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private void OpenAssignRoleModal()
+    {
+        _selectedRoleIds.Clear();
+        _assignMode = "CurrentOu";
+        _showAssignRoleModal = true;
+    }
+
+    private void ToggleSelectedRole(Guid roleId)
+    {
+        if (_selectedRoleIds.Contains(roleId))
+            _selectedRoleIds.Remove(roleId);
+        else
+            _selectedRoleIds.Add(roleId);
+    }
+
+    private async Task ExecuteRoleAssignmentAsync()
+    {
+        if (_selectedOu == null || !_selectedRoleIds.Any()) return;
+
+        try
+        {
+            var roleIds = _selectedRoleIds.ToList();
+            var ouIds = new List<Guid> { _selectedOu.Id };
+
+            switch (_assignMode)
+            {
+                case "CurrentOu":
+                    await OuAppService.AddRoleToOrganizationUnitAsync(new AddRoleToOrganizationUnitInput
+                    {
+                        OrganizationUnitId = _selectedOu.Id,
+                        RoleIds = roleIds
+                    });
+                    break;
+
+                case "ChildrenOu":
+                    await OuAppService.AddRoleToChildrenOrganizationUnitAsync(new AddRoleToChildrenOrganizationUnitInput
+                    {
+                        OrganizationUnitIds = ouIds,
+                        RoleIds = roleIds
+                    });
+                    break;
+
+                case "Manager":
+                    await OuAppService.AddRoleToManagerAsync(new AddRoleToManagerInput
+                    {
+                        OrganizationUnitIds = ouIds,
+                        RoleIds = roleIds
+                    });
+                    break;
+
+                case "ChildrenManagers":
+                    await OuAppService.AddRoleToChildrenManagersAsync(new AddRoleToChildrenManagersInput
+                    {
+                        OrganizationUnitIds = ouIds,
+                        RoleIds = roleIds
+                    });
+                    break;
+            }
+
+            CloseModal();
+            if (_selectedOu != null)
+            {
+                await SelectOuAsync(_selectedOu);
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private void CloseModal()
+    {
+        _showCreateModal = false;
+        _showAssignRoleModal = false;
+    }
+
+    private static int CountTreeNodes(List<OrganizationUnitTreeDto> nodes)
+    {
+        return nodes.Sum(n => 1 + CountTreeNodes(n.Children));
+    }
+}

@@ -1,2 +1,16 @@
 <Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/Abp.Spark.Application.Contracts/Abp.Spark.Application.Contracts.csproj" />
+    <Project Path="src/Abp.Spark.Application/Abp.Spark.Application.csproj" />
+    <Project Path="src/Abp.Spark.Domain.Shared/Abp.Spark.Domain.Shared.csproj" />
+    <Project Path="src/Abp.Spark.Domain/Abp.Spark.Domain.csproj" />
+    <Project Path="src/Abp.Spark.EntityFrameworkCore/Abp.Spark.EntityFrameworkCore.csproj" />
+    <Project Path="src/Abp.Spark.HttpApi/Abp.Spark.HttpApi.csproj" />
+    <Project Path="src/Abp.Spark.Web/Abp.Spark.Web.csproj" />
+  </Folder>
 </Solution>

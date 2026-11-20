@@ -1,0 +1,8 @@
+﻿@using Microsoft.Extensions.Hosting
+@inject IWebHostEnvironment Env
+
+<!-- 统一引用优化构建后的静态 CSS 与 JS 脚本，保障开发与生产环境 100% 具备完整样式与交互 -->
+<link rel="stylesheet" href="/build/assets/app.css" />
+<script type="module" src="/build/assets/app.js"></script>
+
+

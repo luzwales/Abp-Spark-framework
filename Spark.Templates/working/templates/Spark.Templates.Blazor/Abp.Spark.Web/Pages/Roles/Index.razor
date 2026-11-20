@@ -1,0 +1,488 @@
+@page "/roles"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@inject IRoleAppService RoleAppService
+@inject Volo.Abp.PermissionManagement.IPermissionAppService PermissionAppService
+@inject Volo.Abp.Authorization.Permissions.IPermissionDefinitionManager PermissionDefinitionManager
+@inject Volo.Abp.PermissionManagement.IPermissionManager PermissionManager
+@inject Volo.Abp.Identity.IdentityRoleManager RoleManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>@L["Roles"]</PageTitle>
+
+<section class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="ShieldCheck" Class="w-7 h-7 text-primary" />
+            <span>@L["Roles"]</span>
+        </h1>
+
+        <div class="flex items-center gap-2">
+            <!-- 新增按钮：紧凑尺寸、默认透明背景、hover 变色 -->
+            <button type="button"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                    title="@L["Create"]"
+                    @onclick="OpenCreateModal">
+                <LucideIcon Name="Plus" Class="w-4 h-4" />
+            </button>
+        </div>
+    </div>
+
+    <!-- Table Container Card -->
+    <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-[#1b2e4b]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div class="relative w-full sm:w-72">
+                <input type="text"
+                       placeholder="@L["search_placeholder"]"
+                       class="form-input w-full pl-10 pr-4 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white placeholder-[#888ea8] focus:ring-2 focus:ring-primary/20 outline-none transition"
+                       @bind="_filter"
+                       @bind:event="oninput" />
+                <div class="absolute left-3.5 top-2.5 text-[#888ea8]">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="text-xs text-[#888ea8] font-semibold">
+                @L["Total"]: <span class="text-primary font-bold">@FilteredRoles.Count</span>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-[#506690] dark:text-[#888ea8]">
+                <thead>
+                    <tr class="border-b border-gray-100 dark:border-[#191e3a] text-[#0e1726] dark:text-white font-extrabold uppercase tracking-wider text-[11px]">
+                        <th class="py-3 px-4">@L["Name"]</th>
+                        <th class="py-3 px-4">@L["Default"]</th>
+                        <th class="py-3 px-4">@L["Public"]</th>
+                        <th class="py-3 px-4">@L["Identifier"]</th>
+                        <th class="py-3 px-4 text-right">@L["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-[#191e3a]">
+                    @if (_isLoading)
+                    {
+                        <tr>
+                            <td colspan="5" class="py-12 text-center text-sm text-[#888ea8]">
+                                @L["Loading"]
+                            </td>
+                        </tr>
+                    }
+                    else if (!FilteredRoles.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="py-12 text-center text-sm text-[#888ea8]">
+                                @L["NoData"]
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var role in FilteredRoles)
+                        {
+                            <tr class="hover:bg-[#f8f9fa] dark:hover:bg-[#121e32]/60 transition-colors">
+                                <td class="py-3.5 px-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary/10 to-secondary/10 text-primary font-extrabold text-xs flex items-center justify-center shrink-0">
+                                            <LucideIcon Name="ShieldCheck" Class="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-[#0e1726] dark:text-white text-xs">@role.Name</div>
+                                            <div class="text-[11px] text-[#888ea8] font-mono">@(role.ConcurrencyStamp?.Length > 8 ? role.ConcurrencyStamp[..8] + "..." : role.ConcurrencyStamp)</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    @if (role.IsDefault)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-success/10 text-success">
+                                            @L["Yes"]
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-[#888ea8]">
+                                            @L["No"]
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    @if (role.IsPublic)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary">
+                                            @L["Public"]
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-[#888ea8]">
+                                            @L["Restricted"]
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-4 font-mono text-[11px] text-[#888ea8]">
+                                    @role.Id.ToString()[..8]...
+                                </td>
+                                <td class="py-3.5 px-4 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <!-- 1. 编辑基础信息 (纯 View/Eye 图标) -->
+                                        <button type="button"
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-primary hover:bg-primary/10 transition cursor-pointer"
+                                                title="@L["Edit"]"
+                                                @onclick="() => OpenEditModal(role)">
+                                            <LucideIcon Name="Eye" Class="w-3.5 h-3.5" />
+                                        </button>
+
+                                        <!-- 2. 权限设定 (纯 ShieldCheck 图标) -->
+                                        <button type="button"
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-warning hover:bg-warning/10 transition cursor-pointer"
+                                                title="@L["Permissions"]"
+                                                @onclick="() => OpenPermissionModal(role)">
+                                            <LucideIcon Name="ShieldCheck" Class="w-3.5 h-3.5" />
+                                        </button>
+
+                                        <!-- 3. 删除 (纯 Trash2 图标) -->
+                                        <button type="button"
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                                                title="@L["Delete"]"
+                                                @onclick="() => DeleteRoleAsync(role.Id)">
+                                            <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create Role Modal -->
+    @if (_showCreateModal)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in border border-gray-100 dark:border-[#1b2e4b]">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
+                        <LucideIcon Name="Plus" Class="w-4 h-4 text-primary" />
+                        <span>@L["CreateRole"]</span>
+                    </h3>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+                <div class="space-y-4 py-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Name"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border border-gray-200 dark:border-[#191e3a] text-[#0e1726] dark:text-white outline-none" @bind="_createRoleName" placeholder="e.g. QualityManager" />
+                    </div>
+                    <div class="flex items-center gap-4 pt-2">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#0e1726] dark:text-white">
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rounded" @bind="_createIsDefault" />
+                            <span>@L["Default"]</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#0e1726] dark:text-white">
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rounded" @bind="_createIsPublic" />
+                            <span>@L["Public"]</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="CreateRoleAsync">@L["Save"]</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Edit Role Modal -->
+    @if (_showEditModal && _selectedRole != null)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in border border-gray-100 dark:border-[#1b2e4b]">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
+                        <LucideIcon Name="Eye" Class="w-4 h-4 text-primary" />
+                        <span>@L["Edit"] - @_selectedRole.Name</span>
+                    </h3>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+                <div class="space-y-4 py-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Name"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border border-gray-200 dark:border-[#191e3a] text-[#0e1726] dark:text-white outline-none" @bind="_editRoleName" />
+                    </div>
+                    <div class="flex items-center gap-4 pt-2">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#0e1726] dark:text-white">
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rounded" @bind="_editIsDefault" />
+                            <span>@L["Default"]</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#0e1726] dark:text-white">
+                            <input type="checkbox" class="checkbox checkbox-primary checkbox-xs rounded" @bind="_editIsPublic" />
+                            <span>@L["Public"]</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="UpdateRoleAsync">@L["Save"]</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Reusable Permission Tree Modal -->
+    @if (_showPermissionModal && _selectedRole != null)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl animate-fade-in border border-gray-100 dark:border-[#1b2e4b]">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <div>
+                        <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
+                            <LucideIcon Name="ShieldCheck" Class="w-5 h-5 text-warning" />
+                            <span>@L["Permissions"] - @_selectedRole.Name</span>
+                        </h3>
+                        <p class="text-xs text-[#888ea8] mt-0.5">@L["PermissionsSubtitle"]</p>
+                    </div>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+
+                <!-- Tree View Scroll Area (using reusable PermissionTree component) -->
+                <div class="flex-1 overflow-y-auto py-4">
+                    @if (_isPermissionLoading)
+                    {
+                        <div class="py-12 text-center text-sm text-[#888ea8]">@L["Loading"]</div>
+                    }
+                    else if (!string.IsNullOrEmpty(_permissionError))
+                    {
+                        <div class="p-4 rounded-xl bg-danger/10 text-danger text-xs font-semibold">
+                            @_permissionError
+                        </div>
+                    }
+                    else
+                    {
+                        <PermissionTree AllPermissions="@_allPermissionKeys"
+                                        @bind-GrantedPermissions="_grantedPermissions" />
+                    }
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <div class="text-xs text-[#888ea8]">
+                        @L["Granted"]: <span class="font-bold text-primary font-mono">@_grantedPermissions.Count</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                        <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="SavePermissionsAsync">@L["Save"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private List<IdentityRoleDto> _roles = new();
+    private string _filter = string.Empty;
+    private bool _isLoading = true;
+
+    // Create Modal State
+    private bool _showCreateModal = false;
+    private string _createRoleName = string.Empty;
+    private bool _createIsDefault = false;
+    private bool _createIsPublic = true;
+
+    // Edit Modal State
+    private bool _showEditModal = false;
+    private string _editRoleName = string.Empty;
+    private bool _editIsDefault = false;
+    private bool _editIsPublic = true;
+
+    // Permission Modal State
+    private bool _showPermissionModal = false;
+    private bool _isPermissionLoading = false;
+    private string? _permissionError;
+    private IdentityRoleDto? _selectedRole;
+    private List<string> _allPermissionKeys = new();
+    private HashSet<string> _grantedPermissions = new();
+    private HashSet<string> _initialGrantedPermissions = new();
+
+    private List<IdentityRoleDto> FilteredRoles => string.IsNullOrWhiteSpace(_filter)
+        ? _roles
+        : _roles.Where(r => r.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRolesAsync();
+    }
+
+    private async Task LoadRolesAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var res = await RoleAppService.AllListAsync();
+            _roles = res.Items?.ToList() ?? new();
+        }
+        catch
+        {
+            _roles = new();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenCreateModal()
+    {
+        _createRoleName = string.Empty;
+        _createIsDefault = false;
+        _createIsPublic = true;
+        _showCreateModal = true;
+    }
+
+    private async Task CreateRoleAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_createRoleName)) return;
+
+        try
+        {
+            await RoleAppService.CreateAsync(new IdentityRoleCreateDto
+            {
+                Name = _createRoleName.Trim(),
+                IsDefault = _createIsDefault,
+                IsPublic = _createIsPublic
+            });
+            CloseModal();
+            await LoadRolesAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private void OpenEditModal(IdentityRoleDto role)
+    {
+        _selectedRole = role;
+        _editRoleName = role.Name;
+        _editIsDefault = role.IsDefault;
+        _editIsPublic = role.IsPublic;
+        _showEditModal = true;
+    }
+
+    private async Task UpdateRoleAsync()
+    {
+        if (_selectedRole == null || string.IsNullOrWhiteSpace(_editRoleName)) return;
+
+        try
+        {
+            var roleEntity = await RoleManager.FindByIdAsync(_selectedRole.Id.ToString());
+            if (roleEntity != null)
+            {
+                await RoleManager.SetRoleNameAsync(roleEntity, _editRoleName.Trim());
+                roleEntity.IsDefault = _editIsDefault;
+                roleEntity.IsPublic = _editIsPublic;
+                await RoleManager.UpdateAsync(roleEntity);
+            }
+            CloseModal();
+            await LoadRolesAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task DeleteRoleAsync(Guid id)
+    {
+        try
+        {
+            await RoleAppService.DeleteAsync(new Lion.AbpPro.Core.IdInput { Id = id });
+            await LoadRolesAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task OpenPermissionModal(IdentityRoleDto role)
+    {
+        _selectedRole = role;
+        _showPermissionModal = true;
+        _isPermissionLoading = true;
+        _permissionError = null;
+        _grantedPermissions.Clear();
+        _allPermissionKeys.Clear();
+        StateHasChanged();
+        await Task.Yield();
+
+        try
+        {
+            var groups = await PermissionDefinitionManager.GetGroupsAsync();
+
+            var allDefs = groups
+                .SelectMany(g => g.GetPermissionsWithChildren())
+                .Where(p => p.IsEnabled && (!p.Providers.Any() || p.Providers.Contains("R")))
+                .Distinct()
+                .ToList();
+
+            _allPermissionKeys = allDefs
+                .Select(p => p.Name)
+                .Distinct()
+                .ToList();
+
+            var grants = await PermissionManager.GetAsync(_allPermissionKeys.ToArray(), "R", role.Name);
+
+            _grantedPermissions = grants.Result
+                .Where(p => p.IsGranted)
+                .Select(p => p.Name)
+                .ToHashSet();
+            _initialGrantedPermissions = new HashSet<string>(_grantedPermissions);
+        }
+        catch (Exception ex)
+        {
+            _permissionError = ex.Message;
+            Log.Error(ex, "Failed to load permissions for role {RoleName}", role.Name);
+        }
+        finally
+        {
+            _isPermissionLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SavePermissionsAsync()
+    {
+        if (_selectedRole == null) return;
+
+        try
+        {
+            foreach (var k in _allPermissionKeys)
+            {
+                var shouldGrant = _grantedPermissions.Contains(k);
+                var wasGranted = _initialGrantedPermissions.Contains(k);
+                if (shouldGrant != wasGranted)
+                {
+                    await PermissionManager.SetAsync(k, "R", _selectedRole.Name, shouldGrant);
+                }
+            }
+
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            _permissionError = ex.Message;
+            Log.Error(ex, "Failed to save permissions for role {RoleName}", _selectedRole.Name);
+        }
+    }
+
+    private void CloseModal()
+    {
+        _showCreateModal = false;
+        _showEditModal = false;
+        _showPermissionModal = false;
+        _selectedRole = null;
+    }
+}

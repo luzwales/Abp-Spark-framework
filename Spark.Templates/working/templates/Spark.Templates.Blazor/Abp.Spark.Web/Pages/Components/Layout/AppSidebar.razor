@@ -1,0 +1,203 @@
+@inject NavigationManager NavigationManager
+@inject IMenuAppService MenuAppService
+
+@code {
+    [CascadingParameter] public PageState PageState { get; set; } = default!;
+
+    private List<MenuDto> _userMenus = new();
+    private readonly HashSet<Guid> _expandedGroups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (PageState?.User?.IsAuthenticated == true)
+            {
+                _userMenus = await MenuAppService.GetUserMenusAsync();
+            }
+            else
+            {
+                _userMenus = await MenuAppService.GetAllAsync();
+            }
+
+            // 默认展开所有一级 Group
+            foreach (var group in _userMenus.Where(x => x.Type == SidebarItemType.Group))
+            {
+                _expandedGroups.Add(group.Id);
+            }
+        }
+        catch
+        {
+            _userMenus = new();
+        }
+    }
+
+    private void ToggleGroup(Guid id)
+    {
+        if (_expandedGroups.Contains(id))
+        {
+            _expandedGroups.Remove(id);
+        }
+        else
+        {
+            _expandedGroups.Add(id);
+        }
+    }
+
+    private bool IsActive(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+        var current = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        if (string.IsNullOrEmpty(current) && path == "/") return true;
+        return string.Equals("/" + current, path, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+<!-- Sidebar Container (Borderless & Soft Shadow) -->
+<aside class="app-sidebar flex flex-col">
+    <!-- Brand Logo Area (Height aligned with Header h-[60px], no bottom border) -->
+    <div class="flex items-center justify-between px-6 h-[60px] min-h-[60px]">
+        <a href="/" class="flex items-center gap-2.5 font-bold text-xl text-[#0e1726] dark:text-white tracking-wide">
+            <!-- Vristo Style Gradient Square with Lucide Sparkles Icon -->
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md">
+                <LucideIcon Name="LayoutDashboard" Class="w-4 h-4 text-white" />
+            </div>
+            <span class="uppercase font-extrabold text-base bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-nunito">
+                SPARK
+            </span>
+        </a>
+
+        <!-- Collapse Button with Lucide ChevronsLeft -->
+        <button type="button"
+                class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-[#191e3a] text-[#888ea8] hover:text-primary dark:hover:text-white transition cursor-pointer"
+                onclick="window.themeManager?.toggleSidebar()"
+                aria-label="Collapse Sidebar"
+                title="Collapse Sidebar">
+            <LucideIcon Name="ChevronsLeft" Class="w-5 h-5" />
+        </button>
+    </div>
+
+    <!-- Navigation Scroll Area -->
+    <div class="flex-1 overflow-y-auto px-4 py-2 space-y-4">
+        <!-- 静态公共首页链接 -->
+        <div>
+            <ul class="space-y-1 text-sm font-semibold">
+                <li>
+                    <a href="/"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors @(IsActive("/") ? "bg-primary text-white shadow-sm" : "text-[#506690] dark:text-[#888ea8] hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] hover:text-primary dark:hover:text-white")">
+                        <LucideIcon Name="House" Class="w-5 h-5 shrink-0" />
+                        <span>@L["home"]</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 动态菜单树渲染 (DDD MenuConfig 驱动) -->
+        @if (_userMenus.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var menu in _userMenus)
+                {
+                    if (menu.Type == SidebarItemType.Link)
+                    {
+                        <ul class="space-y-1 text-sm font-semibold">
+                            <li>
+                                <a href="@menu.Route"
+                                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors @(IsActive(menu.Route) ? "bg-primary text-white shadow-sm" : "text-[#506690] dark:text-[#888ea8] hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] hover:text-primary dark:hover:text-white")">
+                                    <LucideIcon Name="@(menu.Icon ?? "Circle")" Class="w-5 h-5 shrink-0" />
+                                    <span>@(L[menu.Label])</span>
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                    else if (menu.Type == SidebarItemType.Group)
+                    {
+                        <div class="sidebar-group-item">
+                            <!-- 分组标题（手风琴模式互斥折叠） -->
+                            <button type="button"
+                                    class="w-full flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-[#888ea8] dark:text-[#506690] px-3 py-2 rounded-lg hover:text-primary hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] transition-all cursor-pointer select-none"
+                                    onclick="window.sidebarAccordion?.toggle('@menu.Id')">
+                                <span class="flex items-center gap-2">
+                                    <LucideIcon Name="@(menu.Icon ?? "Folder")" Class="w-3.5 h-3.5" />
+                                    <span>@(L[menu.Label])</span>
+                                </span>
+                                <svg class="sidebar-group-chevron w-3.5 h-3.5 transition-transform duration-200" id="group-chevron-@menu.Id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m9 18 6-6-6-6"/>
+                                </svg>
+                            </button>
+
+                            <div class="sidebar-group-children space-y-1 mt-1 pl-2 transition-all duration-300" id="group-container-@menu.Id" data-group-id="@menu.Id">
+                                @if (menu.Children.Any())
+                                {
+                                    <ul class="space-y-1 text-sm font-semibold">
+                                        @foreach (var child in menu.Children)
+                                        {
+                                            <li>
+                                                <a href="@child.Route"
+                                                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors @(IsActive(child.Route) ? "bg-primary text-white shadow-sm font-bold" : "text-[#506690] dark:text-[#888ea8] hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] hover:text-primary dark:hover:text-white")">
+                                                    <LucideIcon Name="@(child.Icon ?? "Circle")" Class="w-4 h-4 shrink-0" />
+                                                    <span class="text-xs">@(L[child.Label])</span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+
+        <!-- 静态账户与登录部分 -->
+        @if (!PageState.User.IsAuthenticated)
+        {
+            <div>
+                <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-[#888ea8] dark:text-[#506690] px-3 mb-2">
+                    @L["authentication"]
+                </h2>
+                <ul class="space-y-1 text-sm font-semibold">
+                    <li>
+                        <a href="/login"
+                           class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors @(IsActive("/login") ? "bg-primary text-white shadow-sm" : "text-[#506690] dark:text-[#888ea8] hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] hover:text-primary dark:hover:text-white")">
+                            <LucideIcon Name="LogIn" Class="w-5 h-5 shrink-0" />
+                            <span>@L["login"]</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/register"
+                           class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors @(IsActive("/register") ? "bg-primary text-white shadow-sm" : "text-[#506690] dark:text-[#888ea8] hover:bg-[#f1f2f3] dark:hover:bg-[#191e3a] hover:text-primary dark:hover:text-white")">
+                            <LucideIcon Name="Users" Class="w-5 h-5 shrink-0" />
+                            <span>@L["register"]</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+
+    <!-- User Profile Footer in Sidebar (No border, soft rounded container) -->
+    @if (PageState.User.IsAuthenticated)
+    {
+        <div class="p-3 m-3 rounded-xl bg-gray-50 dark:bg-[#121e32]/40">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                    <div class="w-8 h-8 rounded-full bg-primary/20 text-primary font-bold text-xs flex items-center justify-center shrink-0">
+                        @(string.IsNullOrWhiteSpace(PageState.User.Name) ? "U" : PageState.User.Name[0].ToString().ToUpper())
+                    </div>
+                    <div class="truncate">
+                        <p class="text-xs font-bold text-[#0e1726] dark:text-white truncate">@PageState.User.Name</p>
+                        <p class="text-[10px] text-[#888ea8] truncate">@PageState.User.Email</p>
+                    </div>
+                </div>
+                <form action="/logout" method="post" class="m-0">
+                    <button type="submit"
+                            class="w-7 h-7 rounded-full flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                            title="@L["logout"]">
+                        <LucideIcon Name="LogOut" Class="w-4 h-4" />
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+</aside>

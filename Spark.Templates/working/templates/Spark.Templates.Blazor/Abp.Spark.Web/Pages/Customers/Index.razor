@@ -1,0 +1,485 @@
+@page "/customers"
+@rendermode InteractiveServer
+@attribute [Authorize(AbpSparkPermissions.Customers.Default)]
+@inject ICustomerAppService CustomerAppService
+@inject IAuthorizationService AuthorizationService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@L["Customers"]</PageTitle>
+
+<section class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="Factory" Class="w-7 h-7 text-primary" />
+            <span>@L["Customers"]</span>
+        </h1>
+
+        <div class="flex items-center gap-2">
+            @if (_canCreate)
+            {
+                <button type="button"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                        title="@L["Create"]"
+                        @onclick="OpenCreateModal">
+                    <LucideIcon Name="Plus" Class="w-4 h-4" />
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Filter & Table Card -->
+    <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-6 shadow-sm space-y-4">
+        <!-- Search Filters Bar -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="sm:col-span-4 relative">
+                <input type="text"
+                       placeholder="@L["search_placeholder"]"
+                       class="form-input w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white placeholder-[#888ea8] outline-none"
+                       @bind="_filterText"
+                       @bind:event="oninput"
+                       @onkeyup="@HandleSearchKeyUp" />
+                <div class="absolute left-3 top-2.5 text-[#888ea8]">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="sm:col-span-3">
+                <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none"
+                        @bind="_selectedIndustry"
+                        @bind:after="LoadCustomersAsync">
+                    <option value="">@L["AllIndustries"]</option>
+                    <option value="新能源汽车">@L["IndustryEV"]</option>
+                    <option value="消费电子">@L["IndustryCE"]</option>
+                    <option value="光伏储能">@L["IndustryPV"]</option>
+                    <option value="半导体装备">@L["IndustrySemi"]</option>
+                    <option value="航空航天">@L["IndustryAero"]</option>
+                </select>
+            </div>
+
+            <div class="sm:col-span-3">
+                <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none"
+                        @bind="_selectedStatus"
+                        @bind:after="LoadCustomersAsync">
+                    <option value="">@L["AllStatuses"]</option>
+                    <option value="true">@L["Cooperating"]</option>
+                    <option value="false">@L["Frozen"]</option>
+                </select>
+            </div>
+
+            <div class="sm:col-span-2 flex items-center justify-end">
+                <button type="button"
+                        class="px-4 py-2 w-full rounded-xl text-xs font-semibold bg-gray-100 dark:bg-[#121e32] text-[#0e1726] dark:text-white hover:text-primary transition cursor-pointer"
+                        @onclick="ResetFiltersAsync">
+                    @L["ResetFilters"]
+                </button>
+            </div>
+        </div>
+
+        <!-- Customer DataGrid -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-[#506690] dark:text-[#888ea8]">
+                <thead>
+                    <tr class="border-b border-gray-100 dark:border-[#191e3a] text-[#0e1726] dark:text-white font-extrabold uppercase tracking-wider text-[11px]">
+                        <th class="py-3 px-3">@L["CodeAndName"]</th>
+                        <th class="py-3 px-3">@L["IndustryAndCredit"]</th>
+                        <th class="py-3 px-3">@L["CreditCode"]</th>
+                        <th class="py-3 px-3">@L["Contact"]</th>
+                        <th class="py-3 px-3">@L["Settlement"]</th>
+                        <th class="py-3 px-3 text-center">@L["Status"]</th>
+                        <th class="py-3 px-3 text-right">@L["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-[#191e3a]">
+                    @if (_isLoading)
+                    {
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-xs text-[#888ea8]">@L["Loading"]</td>
+                        </tr>
+                    }
+                    else if (!_customers.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-xs text-[#888ea8]">@L["NoData"]</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in _customers)
+                        {
+                            <tr class="hover:bg-[#f8f9fa] dark:hover:bg-[#121e32]/60 transition-colors">
+                                <td class="py-3.5 px-3">
+                                    <div class="font-mono text-[11px] font-bold text-primary">@c.Code</div>
+                                    <div class="font-bold text-[#0e1726] dark:text-white flex items-center gap-1.5 mt-0.5">
+                                        <span>@c.Name</span>
+                                        <span class="text-[10px] text-[#888ea8] font-normal">(@c.ShortName)</span>
+                                    </div>
+                                </td>
+                                <td class="py-3.5 px-3">
+                                    <div class="text-[#0e1726] dark:text-white font-semibold">@TranslateIndustry(c.IndustryType)</div>
+                                    <div class="mt-0.5">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold @GetCreditBadgeClass(c.CreditLevel)">
+                                            @c.CreditLevel
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="py-3.5 px-3 font-mono text-[11px] text-[#888ea8]">
+                                    @(string.IsNullOrWhiteSpace(c.TaxNumber) ? "-" : c.TaxNumber)
+                                </td>
+                                <td class="py-3.5 px-3">
+                                    <div class="font-bold text-[#0e1726] dark:text-white">@c.ContactPerson</div>
+                                    <div class="text-[11px] font-mono text-[#888ea8]">@c.ContactPhone</div>
+                                </td>
+                                <td class="py-3.5 px-3 font-semibold text-[#0e1726] dark:text-white">
+                                    @TranslateSettlement(c.SettlementMethod)
+                                </td>
+                                <td class="py-3.5 px-3 text-center">
+                                    @if (_canManageStatus)
+                                    {
+                                        <button type="button"
+                                                class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition @(c.IsActive ? "bg-success/10 text-success" : "bg-gray-100 text-[#888ea8]")"
+                                                @onclick="() => ToggleStatusAsync(c.Id)">
+                                            @(c.IsActive ? L["Cooperating"] : L["Frozen"])
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold @(c.IsActive ? "bg-success/10 text-success" : "bg-gray-100 text-[#888ea8]")">
+                                            @(c.IsActive ? L["Cooperating"] : L["Frozen"])
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-3 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        @if (_canUpdate)
+                                        {
+                                            <button type="button"
+                                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-primary hover:bg-primary/10 transition cursor-pointer"
+                                                    title="@L["Edit"]"
+                                                    @onclick="() => OpenEditModal(c)">
+                                                <LucideIcon Name="Eye" Class="w-3.5 h-3.5" />
+                                            </button>
+                                        }
+                                        @if (_canDelete)
+                                        {
+                                            <button type="button"
+                                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                                                    title="@L["Delete"]"
+                                                    @onclick="() => DeleteCustomerAsync(c.Id)">
+                                                <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-[#191e3a] text-xs text-[#888ea8]">
+            <span>@L["Total"]: <strong class="text-primary font-mono">@_totalCount</strong></span>
+        </div>
+    </div>
+
+    <!-- Create / Edit Customer Modal -->
+    @if (_showModal)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-2xl shadow-xl animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#191e3a]">
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white">
+                        @(_isEdit ? L["EditCustomer"] : L["CreateCustomer"])
+                    </h3>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Code"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.Code" placeholder="CUST-2026-001" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["ShortName"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.ShortName" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["CompanyName"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.Name" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["TaxNumber"]</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none font-mono" @bind="_form.TaxNumber" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Industry"]</label>
+                        <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.IndustryType">
+                            <option value="新能源汽车">@L["IndustryEV"]</option>
+                            <option value="消费电子">@L["IndustryCE"]</option>
+                            <option value="光伏储能">@L["IndustryPV"]</option>
+                            <option value="半导体装备">@L["IndustrySemi"]</option>
+                            <option value="航空航天">@L["IndustryAero"]</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["ContactPerson"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.ContactPerson" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["ContactPhone"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.ContactPhone" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Email"]</label>
+                        <input type="email" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.ContactEmail" placeholder="contact@company.com" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["CreditLevel"]</label>
+                        <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.CreditLevel">
+                            <option value="AAA">AAA</option>
+                            <option value="AA">AA</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Settlement"]</label>
+                        <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_form.SettlementMethod">
+                            <option value="月结30天">@L["Net30"]</option>
+                            <option value="月结60天">@L["Net60"]</option>
+                            <option value="月结90天">@L["Net90"]</option>
+                            <option value="款到发货">@L["COD"]</option>
+                            <option value="预付现结">@L["Prepaid"]</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Status"]</label>
+                        <div class="flex items-center gap-3 mt-2">
+                            <label class="flex items-center gap-1.5 text-xs text-[#0e1726] dark:text-white cursor-pointer">
+                                <input type="radio" name="isActive" checked="@_form.IsActive" @onchange="@(() => _form.IsActive = true)" />
+                                <span>@L["Cooperating"]</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs text-[#0e1726] dark:text-white cursor-pointer">
+                                <input type="radio" name="isActive" checked="@(!_form.IsActive)" @onchange="@(() => _form.IsActive = false)" />
+                                <span>@L["Frozen"]</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Remark"]</label>
+                        <textarea class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" rows="2" @bind="_form.Remark"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="SaveCustomerAsync">@L["Save"]</button>
+                </div>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private List<CustomerDto> _customers = new();
+    private long _totalCount = 0;
+    private bool _isLoading = true;
+
+    private string _filterText = string.Empty;
+    private string _selectedIndustry = string.Empty;
+    private string _selectedStatus = string.Empty;
+
+    private bool _showModal = false;
+    private bool _isEdit = false;
+    private Guid _editingId = Guid.Empty;
+    private CreateUpdateCustomerDto _form = new();
+
+    private bool _canCreate = false;
+    private bool _canUpdate = false;
+    private bool _canDelete = false;
+    private bool _canManageStatus = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _canCreate = await AuthorizationService.IsGrantedAsync(AbpSparkPermissions.Customers.Create);
+        _canUpdate = await AuthorizationService.IsGrantedAsync(AbpSparkPermissions.Customers.Update);
+        _canDelete = await AuthorizationService.IsGrantedAsync(AbpSparkPermissions.Customers.Delete);
+        _canManageStatus = await AuthorizationService.IsGrantedAsync(AbpSparkPermissions.Customers.ManageStatus);
+
+        await LoadCustomersAsync();
+    }
+
+    private async Task LoadCustomersAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            bool? isActive = string.IsNullOrWhiteSpace(_selectedStatus) ? null : bool.Parse(_selectedStatus);
+            var res = await CustomerAppService.GetListAsync(new GetCustomerListInput
+            {
+                Filter = _filterText,
+                IndustryType = string.IsNullOrWhiteSpace(_selectedIndustry) ? null : _selectedIndustry,
+                IsActive = isActive,
+                SkipCount = 0,
+                MaxResultCount = 50
+            });
+            _customers = res.Items?.ToList() ?? new();
+            _totalCount = res.TotalCount;
+        }
+        catch
+        {
+            _customers = new();
+            _totalCount = 0;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await LoadCustomersAsync();
+        }
+    }
+
+    private async Task ResetFiltersAsync()
+    {
+        _filterText = string.Empty;
+        _selectedIndustry = string.Empty;
+        _selectedStatus = string.Empty;
+        await LoadCustomersAsync();
+    }
+
+    private void OpenCreateModal()
+    {
+        _isEdit = false;
+        _editingId = Guid.Empty;
+        _form = new CreateUpdateCustomerDto
+        {
+            Code = $"CUST-{DateTime.Now:yyyyMMdd}-{new Random().Next(100, 999)}",
+            IndustryType = "新能源汽车",
+            CreditLevel = "A",
+            SettlementMethod = "月结30天",
+            IsActive = true
+        };
+        _showModal = true;
+    }
+
+    private void OpenEditModal(CustomerDto c)
+    {
+        _isEdit = true;
+        _editingId = c.Id;
+        _form = new CreateUpdateCustomerDto
+        {
+            Code = c.Code,
+            Name = c.Name,
+            ShortName = c.ShortName,
+            TaxNumber = c.TaxNumber,
+            IndustryType = c.IndustryType,
+            ContactPerson = c.ContactPerson,
+            ContactPhone = c.ContactPhone,
+            ContactEmail = c.ContactEmail,
+            CreditLevel = c.CreditLevel,
+            SettlementMethod = c.SettlementMethod,
+            IsActive = c.IsActive,
+            Remark = c.Remark
+        };
+        _showModal = true;
+    }
+
+    private async Task SaveCustomerAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_form.Code) || string.IsNullOrWhiteSpace(_form.Name) || string.IsNullOrWhiteSpace(_form.ContactPerson))
+        {
+            return;
+        }
+
+        try
+        {
+            if (_isEdit)
+            {
+                await CustomerAppService.UpdateAsync(_editingId, _form);
+            }
+            else
+            {
+                await CustomerAppService.CreateAsync(_form);
+            }
+
+            CloseModal();
+            await LoadCustomersAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task DeleteCustomerAsync(Guid id)
+    {
+        try
+        {
+            await CustomerAppService.DeleteAsync(id);
+            await LoadCustomersAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task ToggleStatusAsync(Guid id)
+    {
+        try
+        {
+            await CustomerAppService.ToggleStatusAsync(id);
+            var item = _customers.FirstOrDefault(x => x.Id == id);
+            if (item != null) item.IsActive = !item.IsActive;
+        }
+        catch
+        {
+        }
+    }
+
+    private void CloseModal()
+    {
+        _showModal = false;
+    }
+
+    private string TranslateIndustry(string? industry) => industry switch
+    {
+        "新能源汽车" => L["IndustryEV"],
+        "消费电子" => L["IndustryCE"],
+        "光伏储能" => L["IndustryPV"],
+        "半导体装备" => L["IndustrySemi"],
+        "航空航天" => L["IndustryAero"],
+        _ => industry ?? "-"
+    };
+
+    private string TranslateSettlement(string? method) => method switch
+    {
+        "月结30天" => L["Net30"],
+        "月结60天" => L["Net60"],
+        "月结90天" => L["Net90"],
+        "款到发货" => L["COD"],
+        "预付现结" => L["Prepaid"],
+        _ => method ?? "-"
+    };
+
+    private static string GetCreditBadgeClass(string? level)
+    {
+        return (level?.ToUpperInvariant()) switch
+        {
+            "AAA" => "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50",
+            "AA" => "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50",
+            "A" => "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400 border border-sky-200/50",
+            "B" => "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/50",
+            _ => "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/50"
+        };
+    }
+}

@@ -1,0 +1,295 @@
+@page "/notifications"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@inject INotificationAppService NotificationAppService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@L["Notifications"]</PageTitle>
+
+<section class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="Bell" Class="w-7 h-7 text-primary" />
+            <span>@L["Notifications"]</span>
+        </h1>
+
+        <div class="flex items-center gap-2">
+            <button type="button"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-[#121e32] text-[#0e1726] dark:text-white hover:text-primary transition cursor-pointer"
+                    @onclick="MarkAllAsReadAsync">
+                @L["MarkAllRead"]
+            </button>
+            <button type="button"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                    title="@L["SendNotification"]"
+                    @onclick="OpenSendModal">
+                <LucideIcon Name="Plus" Class="w-4 h-4" />
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification Feed Card -->
+    <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-6 shadow-sm space-y-4">
+        <!-- Filter Tabs -->
+        <div class="flex items-center gap-2 border-b border-gray-100 dark:border-[#191e3a] pb-3">
+            <button type="button"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition @(_activeTab == "All" ? "bg-primary text-white" : "text-[#888ea8] hover:text-[#0e1726] dark:hover:text-white")"
+                    @onclick='() => SwitchTab("All")'>
+                @L["AllMessages"] (@_allNotifications.Count)
+            </button>
+            <button type="button"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition @(_activeTab == "Unread" ? "bg-primary text-white" : "text-[#888ea8] hover:text-[#0e1726] dark:hover:text-white")"
+                    @onclick='() => SwitchTab("Unread")'>
+                @L["UnreadMessages"] (@UnreadCount)
+            </button>
+        </div>
+
+        <!-- Notification List -->
+        @if (_isLoading)
+        {
+            <div class="py-12 text-center text-xs text-[#888ea8]">@L["Loading"]</div>
+        }
+        else if (!DisplayedNotifications.Any())
+        {
+            <div class="py-12 text-center text-xs text-[#888ea8]">@L["NoData"]</div>
+        }
+        else
+        {
+            <div class="divide-y divide-gray-100 dark:divide-[#191e3a]">
+                @foreach (var n in DisplayedNotifications)
+                {
+                    <div class="py-4 flex items-start justify-between gap-4 transition hover:bg-[#f8f9fa] dark:hover:bg-[#121e32]/40 rounded-xl px-3 @(!n.Read ? "bg-primary/5 font-semibold" : "")">
+                        <div class="flex items-start gap-3 flex-1">
+                            <!-- Type Icon Badge -->
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 @GetBadgeClass(n.MessageType.ToString())">
+                                <LucideIcon Name="Bell" Class="w-4 h-4" />
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="text-xs font-bold text-[#0e1726] dark:text-white">@n.Title</h4>
+                                    @if (!n.Read)
+                                    {
+                                        <span class="w-2 h-2 rounded-full bg-danger inline-block"></span>
+                                    }
+                                </div>
+                                <p class="text-xs text-[#506690] dark:text-[#888ea8] leading-relaxed">@n.Content</p>
+                                <div class="text-[10px] text-[#888ea8] font-normal">
+                                    <span>@L["Sender"]: @(n.SenderUserName ?? L["SystemSender"])</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            @if (!n.Read)
+                            {
+                                <button type="button"
+                                        class="px-2 py-1 rounded-lg text-[11px] font-bold text-primary hover:bg-primary/10 transition cursor-pointer"
+                                        @onclick="() => MarkAsReadAsync(n.NotificationId)">
+                                    @L["MarkAsRead"]
+                                </button>
+                            }
+                            <button type="button"
+                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                                    title="@L["Delete"]"
+                                    @onclick="() => DeleteMessageAsync(n.NotificationId)">
+                                <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Send Notification Modal -->
+    @if (_showSendModal)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white">@L["SendModalTitle"]</h3>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+                <div class="space-y-4 py-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["NotificationLevel"]</label>
+                        <select class="form-select w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_sendLevel">
+                            <option value="Info">@L["InfoLevel"]</option>
+                            <option value="Warning">@L["WarningLevel"]</option>
+                            <option value="Error">@L["ErrorLevel"]</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Title"]</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_sendTitle" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Content"]</label>
+                        <textarea class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" rows="3" @bind="_sendContent"></textarea>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="SendNotificationAsync">@L["SendNow"]</button>
+                </div>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private List<PagingNotificationSubscriptionOutput> _allNotifications = new();
+    private string _activeTab = "All";
+    private bool _isLoading = true;
+
+    private bool _showSendModal = false;
+    private string _sendLevel = "Info";
+    private string _sendTitle = string.Empty;
+    private string _sendContent = string.Empty;
+
+    private int UnreadCount => _allNotifications.Count(n => !n.Read);
+
+    private List<PagingNotificationSubscriptionOutput> DisplayedNotifications => _activeTab == "Unread"
+        ? _allNotifications.Where(n => !n.Read).ToList()
+        : _allNotifications;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNotificationsAsync();
+    }
+
+    private async Task LoadNotificationsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var res = await NotificationAppService.PageNotificationSubscriptionAsync(new PagingNotificationSubscriptionInput
+            {
+                PageIndex = 1,
+                PageSize = 50
+            });
+            _allNotifications = res.Items?.ToList() ?? new();
+        }
+        catch
+        {
+            _allNotifications = new();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void SwitchTab(string tab)
+    {
+        _activeTab = tab;
+    }
+
+    private async Task MarkAsReadAsync(Guid notificationId)
+    {
+        try
+        {
+            await NotificationAppService.SetReadAsync(new SetReadInput
+            {
+                Id = notificationId
+            });
+            var item = _allNotifications.FirstOrDefault(x => x.NotificationId == notificationId);
+            if (item != null) item.Read = true;
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task MarkAllAsReadAsync()
+    {
+        var unreadIds = _allNotifications.Where(x => !x.Read).Select(x => x.NotificationId).ToList();
+        if (!unreadIds.Any()) return;
+
+        try
+        {
+            await NotificationAppService.SetBatchReadAsync(new SetBatchReadInput
+            {
+                Ids = unreadIds
+            });
+            foreach (var n in _allNotifications) n.Read = true;
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task DeleteMessageAsync(Guid notificationId)
+    {
+        try
+        {
+            await NotificationAppService.DeleteAsync(new DeleteMessageInput
+            {
+                Id = notificationId
+            });
+            _allNotifications.RemoveAll(x => x.NotificationId == notificationId);
+        }
+        catch
+        {
+        }
+    }
+
+    private void OpenSendModal()
+    {
+        _sendLevel = "Info";
+        _sendTitle = string.Empty;
+        _sendContent = string.Empty;
+        _showSendModal = true;
+    }
+
+    private async Task SendNotificationAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_sendTitle) || string.IsNullOrWhiteSpace(_sendContent)) return;
+
+        try
+        {
+            var input = new SendBroadCastMessageInput
+            {
+                Title = _sendTitle,
+                Content = _sendContent
+            };
+
+            switch (_sendLevel)
+            {
+                case "Warning":
+                    await NotificationAppService.SendBroadCastWarningMessageAsync(input);
+                    break;
+                case "Error":
+                    await NotificationAppService.SendBroadCastErrorMessageAsync(input);
+                    break;
+                case "Info":
+                default:
+                    await NotificationAppService.SendBroadCastInformationMessageAsync(input);
+                    break;
+            }
+
+            CloseModal();
+            await LoadNotificationsAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private void CloseModal()
+    {
+        _showSendModal = false;
+    }
+
+    private static string GetBadgeClass(string? type)
+    {
+        return (type?.ToLowerInvariant()) switch
+        {
+            "warning" => "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+            "error" => "bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400",
+            _ => "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+        };
+    }
+}

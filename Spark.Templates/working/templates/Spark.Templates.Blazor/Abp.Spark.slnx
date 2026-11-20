@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="Abp.Spark.Application.Contracts/Abp.Spark.Application.Contracts.csproj" />
+    <Project Path="Abp.Spark.Application/Abp.Spark.Application.csproj" />
+    <Project Path="Abp.Spark.Domain.Shared/Abp.Spark.Domain.Shared.csproj" />
+    <Project Path="Abp.Spark.Domain/Abp.Spark.Domain.csproj" />
+    <Project Path="Abp.Spark.EntityFrameworkCore/Abp.Spark.EntityFrameworkCore.csproj" />
+    <Project Path="Abp.Spark.HttpApi/Abp.Spark.HttpApi.csproj" />
+    <Project Path="Abp.Spark.Web/Abp.Spark.Web.csproj" />
+  </Folder>
+</Solution>

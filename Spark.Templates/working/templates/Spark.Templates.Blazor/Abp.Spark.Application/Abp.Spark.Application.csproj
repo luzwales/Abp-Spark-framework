@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Abp.Spark</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.2" />
+    <ProjectReference Include="..\Abp.Spark.Domain\Abp.Spark.Domain.csproj" />
+    <ProjectReference Include="..\Abp.Spark.Application.Contracts\Abp.Spark.Application.Contracts.csproj" />
+    <PackageReference Include="Volo.Abp.Ddd.Application" Version="10.7.1" />
+    <PackageReference Include="Volo.Abp.AutoMapper" Version="10.7.1" />
+    <PackageReference Include="Volo.Abp.BlobStoring.FileSystem" Version="10.7.1" />
+    <PackageReference Include="Lion.AbpPro.BasicManagement.Application" Version="10.7.0.1" />
+    <PackageReference Include="Lion.AbpPro.NotificationManagement.Application" Version="10.7.0.1" />
+    <PackageReference Include="Lion.AbpPro.DataDictionaryManagement.Application" Version="10.7.0.1" />
+    <PackageReference Include="Lion.AbpPro.LanguageManagement.Application" Version="10.7.0.1" />
+  </ItemGroup>
+
+</Project>

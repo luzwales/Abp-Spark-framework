@@ -1,147 +1,69 @@
 {
     "$schema": "http://json.schemastore.org/template",
-    "author": "Weston Walker",
-    "classifications": [ "Blazor", "Web", "Spark" ],
-    "identity": "Spark.Blazor",
-    "name": "Spark.NET Web App (Blazor)",
-    "description": "A project template for creating a Spark web app with Blazor frontend. Provides a starting point for Blazor apps with database and user auth out of the box.",
+    "author": "Andrew Lu",
+    "classifications": [ "Web", "Blazor", "ABP", "DDD", "Spark" ],
+    "name": "Abp.Spark Web App (ABP vNext + Blazor Monolith)",
+    "identity": "Abp.Spark.Templates.Blazor",
     "shortName": "sparkblazor",
-    "sourceName": "Spark.Templates.Blazor",
     "tags": {
         "language": "C#",
         "type": "project"
     },
+    "sourceName": "Abp.Spark",
+    "preferNameDirectory": true,
     "symbols": {
         "CustomerName": {
             "type": "parameter",
             "dataType": "string",
             "defaultValue": "Abp",
-            "description": "The customer name for the project namespace."
+            "description": "Customer name for namespace prefix (e.g. Acme)"
         },
         "ProjectName": {
             "type": "parameter",
             "dataType": "string",
             "defaultValue": "Spark",
-            "description": "The project name for the project namespace."
+            "description": "Project name (e.g. Shop)"
         },
         "DbProvider": {
             "type": "parameter",
-            "dataType": "string",
+            "datatype": "choice",
+            "choices": [
+                {
+                    "choice": "SqlServer",
+                    "description": "Microsoft SQL Server"
+                },
+                {
+                    "choice": "PostgreSql",
+                    "description": "PostgreSQL"
+                },
+                {
+                    "choice": "MySql",
+                    "description": "MySQL"
+                },
+                {
+                    "choice": "Sqlite",
+                    "description": "SQLite"
+                }
+            ],
             "defaultValue": "SqlServer",
-            "description": "Database provider: SqlServer, PostgreSql, MySql, Sqlite"
+            "description": "Database provider"
         }
     },
     "sources": [
         {
             "modifiers": [
                 {
-                    "exclude": [ ".vs/**" ]
-                },
-                {
-                    "exclude": [ "node_modules/**" ]
-                },
-                {
-                    "exclude": [ ".idea/**" ]
+                    "exclude": [
+                        "**/bin/**",
+                        "**/obj/**",
+                        "**/node_modules/**",
+                        "**/.vs/**",
+                        "**/.vscode/**",
+                        "**/.idea/**",
+                        "**/*.user"
+                    ]
                 }
             ]
         }
-    ],
-    "SpecialCustomOperations": {
-        "**/*.razor": {
-            "operations": [
-                {
-                    "type": "conditional",
-                    "configuration": {
-                        "if": [
-                            "//#if"
-                        ],
-                        "else": [
-                            "//#else"
-                        ],
-                        "elseif": [
-                            "//#elseif"
-                        ],
-                        "endif": [
-                            "//#endif"
-                        ],
-                        "trim": true,
-                        "wholeLine": true,
-                        "evaluator": "C++"
-                    }
-                }
-            ]
-        },
-        "**/*.html": {
-            "operations": [
-                {
-                    "type": "conditional",
-                    "configuration": {
-                        "if": [
-                            "//#if"
-                        ],
-                        "else": [
-                            "//#else"
-                        ],
-                        "elseif": [
-                            "//#elseif"
-                        ],
-                        "endif": [
-                            "//#endif"
-                        ],
-                        "trim": true,
-                        "wholeLine": true,
-                        "evaluator": "C++"
-                    }
-                }
-            ]
-        },
-        "**/*.cshtml": {
-            "operations": [
-                {
-                    "type": "conditional",
-                    "configuration": {
-                        "if": [
-                            "//#if"
-                        ],
-                        "else": [
-                            "//#else"
-                        ],
-                        "elseif": [
-                            "//#elseif"
-                        ],
-                        "endif": [
-                            "//#endif"
-                        ],
-                        "trim": true,
-                        "wholeLine": true,
-                        "evaluator": "C++"
-                    }
-                }
-            ]
-        },
-        "**/*.css": {
-            "operations": [
-                {
-                    "type": "conditional",
-                    "configuration": {
-                        "if": [
-                            "//#if"
-                        ],
-                        "else": [
-                            "//#else"
-                        ],
-                        "elseif": [
-                            "//#elseif"
-                        ],
-                        "endif": [
-                            "//#endif"
-                        ],
-                        "trim": true,
-                        "wholeLine": true,
-                        "evaluator": "C++"
-                    }
-                }
-            ]
-        }
-    }
+    ]
 }

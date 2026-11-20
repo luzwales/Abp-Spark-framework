@@ -1,0 +1,401 @@
+@page "/menus"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@inject IMenuAppService MenuAppService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@L["Menus"]</PageTitle>
+
+<section class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="Menu" Class="w-7 h-7 text-primary" />
+            <span>@L["Menus"]</span>
+        </h1>
+
+        <div class="flex items-center gap-2">
+            <button type="button"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                    title="@L["Create"]"
+                    @onclick="() => OpenModal(null)">
+                <LucideIcon Name="Plus" Class="w-4 h-4" />
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert / Tips Card -->
+    <div class="card bg-white dark:bg-[#0e1726] shadow-sm rounded-2xl p-4 border border-gray-100 dark:border-[#1b2e4b] flex items-center justify-between text-xs text-[#506690] dark:text-[#888ea8]">
+        <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+            <span>@L["MenusTips"]</span>
+        </div>
+        <div class="font-mono text-[11px] font-bold text-primary">
+            @L["Total"]: <span class="font-mono font-bold">@_flatMenus.Count</span>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="card bg-white dark:bg-[#0e1726] shadow-sm rounded-2xl overflow-hidden border border-gray-100 dark:border-[#1b2e4b]">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-[#506690] dark:text-[#888ea8]">
+                <thead>
+                    <tr class="border-b border-gray-100 dark:border-[#191e3a] text-[#0e1726] dark:text-white font-extrabold uppercase tracking-wider text-[11px] bg-gray-50/50 dark:bg-[#121e32]/40">
+                        <th class="py-3 px-4">@L["Name"]</th>
+                        <th class="py-3 px-4">@L["Type"]</th>
+                        <th class="py-3 px-4">@L["Route"]</th>
+                        <th class="py-3 px-4">@L["Icon"]</th>
+                        <th class="py-3 px-4">@L["Permissions"]</th>
+                        <th class="py-3 px-4 text-center">@L["Sort"]</th>
+                        <th class="py-3 px-4 text-center">@L["Status"]</th>
+                        <th class="py-3 px-4 text-right">@L["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-[#191e3a]">
+                    @if (!_flatMenus.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-12 text-[#888ea8]">
+                                @L["NoData"]
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in _flatMenus)
+                        {
+                            <tr class="hover:bg-[#f8f9fa] dark:hover:bg-[#121e32]/60 transition-colors @(item.IsGroup ? "bg-gray-50/30 dark:bg-[#121e32]/20 font-bold" : "")">
+                                <td class="py-3.5 px-4">
+                                    <div class="flex items-center gap-2" style="padding-left: @(item.Level * 20)px;">
+                                        @if (item.IsGroup)
+                                        {
+                                            <LucideIcon Name="Folder" Class="w-4 h-4 text-secondary shrink-0" />
+                                        }
+                                        else
+                                        {
+                                            <span class="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0"></span>
+                                        }
+                                        <div>
+                                            <span class="text-[#0e1726] dark:text-white font-bold">@item.Dto.Name</span>
+                                            <span class="text-[10px] text-[#888ea8] ml-1.5 font-normal">(@item.Dto.Label)</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    @if (item.IsGroup)
+                                    {
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/10 text-secondary">
+                                            @L["Group"]
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary">
+                                            @L["Link"]
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-4 font-mono text-[11px] text-[#0e1726] dark:text-white">
+                                    @(string.IsNullOrEmpty(item.Dto.Route) ? "-" : item.Dto.Route)
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <div class="flex items-center gap-1.5">
+                                        <LucideIcon Name="@(item.Dto.Icon ?? "Circle")" Class="w-4 h-4 text-primary" />
+                                        <span class="text-[11px] font-mono">@(item.Dto.Icon ?? "None")</span>
+                                    </div>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    @if (string.IsNullOrEmpty(item.Dto.PermissionName))
+                                    {
+                                        <span class="text-[#888ea8] italic">@L["Public"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-success/10 text-success">
+                                            @item.Dto.PermissionName
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-4 text-center font-mono font-bold">
+                                    @item.Dto.SortOrder
+                                </td>
+                                <td class="py-3.5 px-4 text-center">
+                                    @if (item.Dto.IsActive)
+                                    {
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success">@L["Active"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-danger/15 text-danger">@L["Disabled"]</span>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-4 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <!-- View / Edit 纯 Eye 图标 -->
+                                        <button type="button"
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-primary hover:bg-primary/10 transition cursor-pointer"
+                                                title="@L["Edit"]"
+                                                @onclick="() => OpenModal(item.Dto)">
+                                            <LucideIcon Name="Eye" Class="w-3.5 h-3.5" />
+                                        </button>
+                                        <!-- 删除 纯 Trash2 图标 -->
+                                        <button type="button"
+                                                class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer"
+                                                title="@L["Delete"]"
+                                                @onclick="() => DeleteMenu(item.Dto.Id)">
+                                            <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Modal: Create / Edit Menu -->
+@if (_isModalOpen)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div class="card bg-white dark:bg-[#0e1726] shadow-2xl rounded-2xl max-w-lg w-full border border-gray-100 dark:border-[#1b2e4b] overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-[#191e3a] flex items-center justify-between">
+                <h3 class="text-base font-bold text-[#0e1726] dark:text-white flex items-center gap-2">
+                    <LucideIcon Name="@(_editingId.HasValue ? "Eye" : "Plus")" Class="w-4 h-4 text-primary" />
+                    <span>@(_editingId.HasValue ? L["Edit"] : L["Create"])</span>
+                </h3>
+                <button type="button" class="text-[#888ea8] hover:text-[#0e1726] dark:hover:text-white" @onclick="CloseModal">
+                    ✕
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                @if (!string.IsNullOrEmpty(_modalError))
+                {
+                    <div class="p-3 rounded-lg bg-danger/10 text-danger font-semibold">
+                        @_modalError
+                    </div>
+                }
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Parent"]</label>
+                        <select @bind="_form.ParentId" class="select select-bordered select-sm w-full bg-transparent">
+                            <option value="">@L["RootNode"]</option>
+                            @foreach (var g in _groupMenus)
+                            {
+                                <option value="@g.Id">@g.Name (@g.Label)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Type"]</label>
+                        <select @bind="_form.Type" class="select select-bordered select-sm w-full bg-transparent">
+                            <option value="@SidebarItemType.Link">@L["Link"]</option>
+                            <option value="@SidebarItemType.Group">@L["Group"]</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Name"] *</label>
+                        <input type="text" @bind="_form.Name" placeholder="MenuManagement" class="input input-bordered input-sm w-full bg-transparent" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Label"] *</label>
+                        <input type="text" @bind="_form.Label" placeholder="Menus" class="input input-bordered input-sm w-full bg-transparent" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Route"]</label>
+                        <input type="text" @bind="_form.Route" placeholder="/menus" class="input input-bordered input-sm w-full bg-transparent" />
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Icon"]</label>
+                        <input type="text" @bind="_form.Icon" placeholder="Menu / Settings" class="input input-bordered input-sm w-full bg-transparent" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">
+                        @L["Permissions"]
+                    </label>
+                    <input type="text" @bind="_form.PermissionName" placeholder="e.g. SparkSystem.Menus" class="input input-bordered input-sm w-full bg-transparent font-mono" />
+                    <div class="mt-1.5 flex flex-wrap gap-1.5 items-center">
+                        <span class="text-[10px] text-[#888ea8]">@L["QuickFill"]:</span>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "SparkSystem.Menus"'>SparkSystem.Menus</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpIdentity.Users"'>AbpIdentity.Users</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpIdentity.Roles"'>AbpIdentity.Roles</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpIdentity.AuditLogs"'>AbpIdentity.AuditLogs</button>
+                        <button type="button" class="badge badge-outline badge-xs font-mono cursor-pointer hover:bg-primary hover:text-white" @onclick='() => _form.PermissionName = "AbpTenantManagement.Tenants"'>AbpTenantManagement.Tenants</button>
+                    </div>
+                    <p class="text-[10px] text-[#888ea8] mt-1">
+                        @L["PermissionHint"]
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-1">
+                    <div>
+                        <label class="block font-semibold text-[#0e1726] dark:text-white mb-1.5">@L["Sort"]</label>
+                        <input type="number" @bind="_form.SortOrder" class="input input-bordered input-sm w-full bg-transparent" />
+                    </div>
+                    <div class="flex items-center pt-6">
+                        <label class="label cursor-pointer gap-2">
+                            <input type="checkbox" @bind="_form.IsActive" class="checkbox checkbox-primary checkbox-sm rounded" />
+                            <span class="label-text text-xs text-[#0e1726] dark:text-white font-semibold">@L["Active"]</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-gray-50 dark:bg-[#121e32]/60 border-t border-gray-100 dark:border-[#191e3a] flex items-center justify-end gap-3">
+                <button type="button" class="btn btn-ghost btn-sm text-xs" @onclick="CloseModal">@L["Cancel"]</button>
+                <button type="button" class="btn btn-primary btn-sm text-xs font-bold" @onclick="SaveMenu">@L["Save"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<MenuDto> _rawMenus = new();
+    private List<FlatMenuItem> _flatMenus = new();
+    private List<MenuDto> _groupMenus = new();
+
+    private bool _isModalOpen = false;
+    private Guid? _editingId = null;
+    private CreateUpdateMenuDto _form = new();
+    private string? _modalError = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _rawMenus = await MenuAppService.GetAllAsync();
+            _flatMenus.Clear();
+            FlattenTree(_rawMenus, 0);
+
+            _groupMenus = _rawMenus
+                .Where(m => m.Type == SidebarItemType.Group)
+                .OrderBy(m => m.SortOrder)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to load menus");
+        }
+    }
+
+    private void FlattenTree(List<MenuDto> nodes, int level)
+    {
+        foreach (var node in nodes.OrderBy(n => n.SortOrder))
+        {
+            _flatMenus.Add(new FlatMenuItem
+            {
+                Dto = node,
+                Level = level,
+                IsGroup = node.Type == SidebarItemType.Group
+            });
+
+            if (node.Children.Any())
+            {
+                FlattenTree(node.Children, level + 1);
+            }
+        }
+    }
+
+    private void OpenModal(MenuDto? dto)
+    {
+        _modalError = null;
+        if (dto != null)
+        {
+            _editingId = dto.Id;
+            _form = new CreateUpdateMenuDto
+            {
+                ParentId = dto.ParentId,
+                Name = dto.Name,
+                Label = dto.Label,
+                Icon = dto.Icon,
+                Route = dto.Route,
+                Type = dto.Type,
+                SortOrder = dto.SortOrder,
+                PermissionName = dto.PermissionName,
+                IsActive = dto.IsActive
+            };
+        }
+        else
+        {
+            _editingId = null;
+            _form = new CreateUpdateMenuDto
+            {
+                Type = SidebarItemType.Link,
+                SortOrder = (_flatMenus.Count + 1) * 5,
+                IsActive = true
+            };
+        }
+        _isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        _isModalOpen = false;
+        _editingId = null;
+    }
+
+    private async Task SaveMenu()
+    {
+        if (string.IsNullOrWhiteSpace(_form.Name) || string.IsNullOrWhiteSpace(_form.Label))
+        {
+            _modalError = "Name and Label are required";
+            return;
+        }
+
+        try
+        {
+            if (_editingId.HasValue)
+            {
+                await MenuAppService.UpdateAsync(_editingId.Value, _form);
+            }
+            else
+            {
+                await MenuAppService.CreateAsync(_form);
+            }
+            CloseModal();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _modalError = ex.Message;
+        }
+    }
+
+    private async Task DeleteMenu(Guid id)
+    {
+        try
+        {
+            await MenuAppService.DeleteAsync(id);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to delete menu");
+        }
+    }
+
+    public class FlatMenuItem
+    {
+        public MenuDto Dto { get; set; } = default!;
+        public int Level { get; set; }
+        public bool IsGroup { get; set; }
+    }
+}

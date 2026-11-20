@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Abp.Spark</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Abp.Spark.Application.Contracts\Abp.Spark.Application.Contracts.csproj" />
+    <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="10.7.1" />
+    <PackageReference Include="Lion.AbpPro.BasicManagement.HttpApi" Version="10.7.0.1" />
+    <PackageReference Include="Lion.AbpPro.NotificationManagement.HttpApi" Version="10.7.0.1" />
+    <PackageReference Include="Lion.AbpPro.DataDictionaryManagement.HttpApi" Version="10.7.0.1" />
+    <PackageReference Include="Lion.AbpPro.LanguageManagement.HttpApi" Version="10.7.0.1" />
+  </ItemGroup>
+
+</Project>

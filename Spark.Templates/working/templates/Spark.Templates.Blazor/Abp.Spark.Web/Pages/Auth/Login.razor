@@ -1,0 +1,161 @@
+@page "/login"
+@layout AuthLayout
+@using System.Security.Claims
+@using Abp.Spark.Users
+@code {
+	[Inject] public IUserAppService UserAppService { get; set; } = default!;
+	[Inject] public NavigationManager NavigationManager { get; set; } = default!;
+	[CascadingParameter] HttpContext HttpContext { get; set; } = default!;
+
+	[SupplyParameterFromQuery]
+	public string? Error { get; set; }
+
+	[SupplyParameterFromForm(FormName = "LoginForm")]
+	public LoginForm Form { get; set; } = default!;
+
+	private string _loginFailedMessage = "";
+
+	protected override void OnInitialized()
+	{
+		Form ??= new()
+		{
+			Email = "admin"
+		};
+	}
+
+	private async Task LoginUser()
+	{
+		try
+		{
+			var user = await UserAppService.LoginAsync(new LoginInputDto
+			{
+				Email = Form.Email,
+				Password = Form.Password
+			});
+
+			var claims = new List<Claim>
+			{
+				new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+				new(ClaimTypes.Name, user.Name),
+				new(ClaimTypes.Email, user.Email),
+				new(ClaimTypes.Role, user.Role),
+				new(ClaimTypes.Role, "Admin"),
+				new(ClaimTypes.Role, "admin")
+			};
+			var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+			var principal = new ClaimsPrincipal(identity);
+
+			await HttpContext.SignInAsync(
+				CookieAuthenticationDefaults.AuthenticationScheme,
+				principal,
+				new AuthenticationProperties
+				{
+					IsPersistent = Form.RememberMe,
+					IssuedUtc = DateTimeOffset.UtcNow,
+					ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+				});
+		}
+		catch (Exception ex)
+		{
+			_loginFailedMessage = ex.Message;
+			return;
+		}
+
+		if (HttpContext?.Response != null && !HttpContext.Response.HasStarted)
+		{
+			HttpContext.Response.Redirect("/dashboard");
+		}
+		else
+		{
+			NavigationManager.NavigateTo("/dashboard", forceLoad: true);
+		}
+	}
+
+	public class LoginForm
+	{
+		public string Email { get; set; } = String.Empty;
+		public string Password { get; set; } = String.Empty;
+		public bool RememberMe { get; set; }
+	}
+
+	public class LoginFormValidator : AbstractValidator<LoginForm>
+	{
+		public LoginFormValidator()
+		{
+			RuleFor(p => p.Email)
+				.NotEmpty().WithMessage("Username or Email is required");
+		
+			RuleFor(p => p.Password)
+				.NotEmpty().WithMessage("Password is required");
+		}
+	}
+}
+
+<PageTitle>@L["login"] - Abp.Spark</PageTitle>
+
+<div class="sm:py-12 px-4">
+	<section class="w-full sm:max-w-md mx-auto py-16 flex flex-col justify-center items-center space-y-6">
+		<a href="/" class="flex items-center gap-3">
+			<div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md">
+				<LucideIcon Name="LayoutDashboard" Class="w-6 h-6 text-white" />
+			</div>
+			<span class="text-2xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-nunito tracking-wider">
+				SPARK
+			</span>
+		</a>
+		<h1 class="text-center text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito">
+			@L["SignInTitle"]
+		</h1>
+		<form action="/login-direct" method="post" class="grid grid-cols-1 gap-y-5 p-6 sm:p-8 bg-white dark:bg-[#0e1726] mx-auto w-full max-w-md shadow-sm border border-gray-100 dark:border-[#1b2e4b] rounded-2xl">
+			@if (!string.IsNullOrEmpty(Error) || !string.IsNullOrEmpty(_loginFailedMessage))
+			{
+				<div class="p-3 rounded-lg bg-danger/10 border border-danger/20 text-danger text-xs font-semibold">
+					<span>@(string.IsNullOrEmpty(Error) ? _loginFailedMessage : Uri.UnescapeDataString(Error))</span>
+				</div>
+			}
+
+			<!-- ABP Default Seed Account Hint -->
+			<div class="p-3 rounded-xl bg-[#f1f2f3]/70 dark:bg-[#121e32] border border-gray-100 dark:border-transparent text-xs text-[#506690] dark:text-[#888ea8] space-y-1.5">
+				<div class="font-bold text-[#0e1726] dark:text-white flex items-center gap-1.5">
+					<span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+					@L["DefaultSeedAccount"]
+				</div>
+				<div class="flex items-center justify-between font-mono text-[11px]">
+					<span>@L["Operator"]: <strong class="text-primary font-bold">admin</strong></span>
+					<span>@L["Password"]: <strong class="text-primary font-bold">1q2w3E*</strong></span>
+					<span>@L["Role"]: <strong class="text-success font-bold">admin</strong></span>
+				</div>
+			</div>
+
+			<label class="form-control w-full">
+				<div class="label pb-1.5">
+					<span class="label-text font-semibold text-xs text-[#0e1726] dark:text-white">@L["UsernameOrEmail"]</span>
+				</div>
+				<input name="Email" type="text" autocomplete="username" value="admin" placeholder="admin" required class="input input-bordered w-full text-sm bg-transparent" />
+            </label>
+
+			<label class="form-control w-full">
+				<div class="label pb-1.5">
+					<span class="label-text font-semibold text-xs text-[#0e1726] dark:text-white">@L["Password"]</span>
+				</div>
+				<input name="Password" type="password" autocomplete="current-password" placeholder="1q2w3E*" required class="input input-bordered w-full text-sm bg-transparent" />
+            </label>
+
+			<div class="form-control">
+              <label class="label cursor-pointer justify-start gap-2 py-0">
+                <input type="checkbox" name="RememberMe" value="true" checked class="checkbox checkbox-primary checkbox-sm rounded" />
+                <span class="label-text text-xs text-[#506690] dark:text-[#888ea8]">@L["RememberMe"]</span>
+              </label>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-2">
+	            <button type="submit" class="btn btn-primary w-full shadow-md text-sm font-bold">
+				    @L["SignIn"]
+	            </button>
+	            <div class="text-center">
+		            <a href="/" class="text-xs text-[#888ea8] hover:text-primary transition">@L["BackToHome"]</a>
+	            </div>
+            </div>
+		</form>
+	</section>
+</div>

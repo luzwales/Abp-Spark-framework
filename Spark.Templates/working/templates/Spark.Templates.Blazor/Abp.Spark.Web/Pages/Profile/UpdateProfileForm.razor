@@ -1,0 +1,99 @@
+﻿@using System.Security.Claims
+@using Volo.Abp.Domain.Repositories
+@using Abp.Spark.Users
+@code {
+    [CascadingParameter] public HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm(Name = "ProfileForm")]
+    public Form ProfileForm { get; set; }
+    private string customMessage = "";
+
+    [Inject] IRepository<AppUser, Guid> UserRepository { get; set; } = default!;
+    [Inject] NavigationManager NavManager { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ProfileForm ??= await Setup();
+    }
+
+    private async Task<Form> Setup()
+    {
+        var email = HttpContext?.User?.Identity?.Name;
+        var currentUser = await UserRepository.FirstOrDefaultAsync(u => u.Email == email);
+        return new Form
+        {
+            Name = currentUser?.Name ?? "",
+            Email = currentUser?.Email ?? ""
+        };
+    }
+
+    private async Task OnSubmit()
+    {
+        var email = HttpContext?.User?.Identity?.Name;
+        var currentUser = await UserRepository.FirstOrDefaultAsync(u => u.Email == email);
+        if (currentUser == null) return;
+
+        var existingUser = await UserRepository.FirstOrDefaultAsync(u => u.Email == ProfileForm.Email);
+        if (existingUser != null && currentUser.Id != existingUser.Id)
+        {
+            customMessage = "Email already in use.";
+            return;
+        }
+
+        currentUser.Email = ProfileForm.Email;
+        currentUser.Name = ProfileForm.Name;
+        await UserRepository.UpdateAsync(currentUser, autoSave: true);
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, currentUser.Id.ToString()),
+            new(ClaimTypes.Name, currentUser.Name),
+            new(ClaimTypes.Email, currentUser.Email),
+            new(ClaimTypes.Role, currentUser.Role)
+        };
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+
+        NavManager.NavigateTo("/profile/edit");
+    }
+
+    public class Form
+    {
+        [Required]
+        public string Name { get; set; } = default!;
+
+        [EmailAddress(ErrorMessage = "Invalid email address.")]
+        [Required(ErrorMessage = "Please enter a valid email address")]
+        public string Email { get; set; } = default!;
+    }
+}
+
+<EditForm Model="ProfileForm" OnValidSubmit="OnSubmit" FormName="ProfileForm" method="post" Enhance class="max-w-2xl grid grid-cols-1 gap-y-6">
+    <DataAnnotationsValidator />
+	<label class="form-control w-full">
+		<div class="label">
+			<span class="label-text font-medium">Name</span>
+		</div>
+		<InputText @bind-Value="ProfileForm.Name" class="input input-bordered w-full" />
+		<ValidationMessage For="() => ProfileForm.Name" />
+    </label>
+    <label class="form-control w-full">
+        <div class="label">
+            <span class="label-text font-medium">Email address</span>
+        </div>
+        <InputText @bind-Value="ProfileForm.Email" type="email" class="input input-bordered w-full" />
+        <ValidationMessage For="() => ProfileForm.Email" />
+        @if (!String.IsNullOrEmpty(customMessage))
+        {
+            <div class="mt-1 text-red-500 text-sm">
+	            @customMessage
+            </div>
+        }
+    </label>
+    <div class="flex justify-end">
+	    <button type="submit" class="btn btn-neutral">
+		    <span class="loading loading-spinner loading-xs htmx-indicator"></span>
+		    Save
+	    </button>
+    </div>
+</EditForm>

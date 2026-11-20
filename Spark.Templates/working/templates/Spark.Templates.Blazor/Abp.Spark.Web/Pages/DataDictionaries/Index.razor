@@ -1,0 +1,440 @@
+@page "/data-dictionaries"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@inject IDataDictionaryAppService DataDictionaryAppService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@L["DataDictionaries"]</PageTitle>
+
+<section class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0e1726] dark:text-white font-nunito flex items-center gap-3">
+            <LucideIcon Name="BookOpen" Class="w-7 h-7 text-primary" />
+            <span>@L["DataDictionaries"]</span>
+        </h1>
+
+        <div class="flex items-center gap-2">
+            <button type="button"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                    title="@L["Create"]"
+                    @onclick="OpenCreateDictModal">
+                <LucideIcon Name="Plus" Class="w-4 h-4" />
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Dual Panel: Left Dictionary Types, Right Details -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Dictionary Categories List -->
+        <div class="lg:col-span-5 card bg-white dark:bg-[#0e1726] rounded-2xl p-5 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#191e3a]">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#0e1726] dark:text-white">@L["DictCategories"]</h3>
+                <span class="text-[11px] text-[#888ea8] font-mono">@L["Total"]: @_dictList.Count</span>
+            </div>
+
+            <!-- Search Filter -->
+            <div class="relative">
+                <input type="text"
+                       placeholder="@L["search_placeholder"]"
+                       class="form-input w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white placeholder-[#888ea8] outline-none"
+                       @bind="_dictSearch"
+                       @bind:event="oninput" />
+                <div class="absolute left-3 top-2.5 text-[#888ea8]">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Category List -->
+            @if (_isLoadingDicts)
+            {
+                <div class="py-12 text-center text-xs text-[#888ea8]">@L["Loading"]</div>
+            }
+            else if (!FilteredDicts.Any())
+            {
+                <div class="py-12 text-center text-xs text-[#888ea8]">@L["NoData"]</div>
+            }
+            else
+            {
+                <div class="space-y-1.5 max-h-[550px] overflow-y-auto">
+                    @foreach (var item in FilteredDicts)
+                    {
+                        var isSelected = _selectedDict?.Id == item.Id;
+                        <div class="p-3 rounded-xl transition cursor-pointer flex items-center justify-between @(isSelected ? "bg-primary/10 border-l-4 border-primary text-primary font-bold" : "hover:bg-[#f6f8fa] dark:hover:bg-[#121e32] text-[#0e1726] dark:text-white")"
+                             @onclick="() => SelectDictAsync(item)">
+                            <div class="truncate flex-1 pr-2">
+                                <div class="text-xs font-bold truncate">@item.DisplayText</div>
+                                <div class="font-mono text-[11px] text-[#888ea8] truncate">@item.Code</div>
+                            </div>
+                            <button type="button"
+                                    class="w-6 h-6 rounded-md flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition"
+                                    title="@L["Delete"]"
+                                    @onclick="() => DeleteDictTypeAsync(item.Id)"
+                                    onclick:stopPropagation="true">
+                                <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Right: Dictionary Details Table -->
+        <div class="lg:col-span-7 space-y-6">
+            @if (_selectedDict == null)
+            {
+                <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-12 text-center shadow-sm">
+                    <LucideIcon Name="BookOpen" Class="w-12 h-12 mx-auto text-[#888ea8] opacity-40 mb-3" />
+                    <p class="text-xs font-semibold text-[#888ea8]">@L["SelectDictHint"]</p>
+                </div>
+            }
+            else
+            {
+                <div class="card bg-white dark:bg-[#0e1726] rounded-2xl p-6 shadow-sm space-y-5">
+                    <!-- Detail Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-xs px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">@_selectedDict.Code</span>
+                                <h2 class="text-base font-bold text-[#0e1726] dark:text-white">@_selectedDict.DisplayText</h2>
+                            </div>
+                            <p class="text-xs text-[#888ea8] mt-1">@(_selectedDict.Description ?? L["NoDescription"])</p>
+                        </div>
+
+                        <button type="button"
+                                class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent text-[#888ea8] hover:text-white hover:bg-primary transition cursor-pointer"
+                                title="@L["AddDetail"]"
+                                @onclick="OpenCreateDetailModal">
+                            <LucideIcon Name="Plus" Class="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    <!-- Details Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-[#506690] dark:text-[#888ea8]">
+                            <thead>
+                                <tr class="border-b border-gray-100 dark:border-[#191e3a] text-[#0e1726] dark:text-white font-extrabold uppercase tracking-wider text-[11px]">
+                                    <th class="py-3 px-3">@L["DisplayName"]</th>
+                                    <th class="py-3 px-3">@L["Code"]</th>
+                                    <th class="py-3 px-3">@L["Order"]</th>
+                                    <th class="py-3 px-3">@L["Status"]</th>
+                                    <th class="py-3 px-3 text-right">@L["Actions"]</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-[#191e3a]">
+                                @if (_isLoadingDetails)
+                                {
+                                    <tr>
+                                        <td colspan="5" class="py-10 text-center text-xs text-[#888ea8]">@L["Loading"]</td>
+                                    </tr>
+                                }
+                                else if (!_details.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5" class="py-10 text-center text-xs text-[#888ea8]">@L["NoData"]</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var detail in _details)
+                                    {
+                                        <tr class="hover:bg-[#f8f9fa] dark:hover:bg-[#121e32]/60 transition-colors">
+                                            <td class="py-3 px-3 font-bold text-[#0e1726] dark:text-white">
+                                                @detail.DisplayText
+                                            </td>
+                                            <td class="py-3 px-3 font-mono text-[11px] text-primary font-bold">
+                                                @detail.Code
+                                            </td>
+                                            <td class="py-3 px-3 font-mono text-[#888ea8]">
+                                                @detail.Order
+                                            </td>
+                                            <td class="py-3 px-3">
+                                                <button type="button"
+                                                        class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition @(detail.IsEnabled ? "bg-success/10 text-success" : "bg-gray-100 text-[#888ea8]")"
+                                                        @onclick="() => ToggleDetailStatusAsync(detail)">
+                                                    @(detail.IsEnabled ? L["Enabled"] : L["DisabledStatus"])
+                                                </button>
+                                            </td>
+                                            <td class="py-3 px-3 text-right">
+                                                <button type="button"
+                                                        class="w-7 h-7 rounded-lg flex items-center justify-center text-[#888ea8] hover:text-danger hover:bg-danger/10 transition cursor-pointer ml-auto"
+                                                        title="@L["Delete"]"
+                                                        @onclick="() => DeleteDetailAsync(detail.Id)">
+                                                    <LucideIcon Name="Trash2" Class="w-3.5 h-3.5" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Create Dict Category Modal -->
+    @if (_showCreateDictModal)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white">@L["CreateDict"]</h3>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+                <div class="space-y-4 py-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["DictCode"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createDictCode" placeholder="e.g. WorkOrderStatus" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["DisplayName"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createDictDisplayName" placeholder="e.g. Work Order Status" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Description"]</label>
+                        <textarea class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" rows="2" @bind="_createDictDesc"></textarea>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="CreateDictCategoryAsync">@L["Save"]</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Create Detail Modal -->
+    @if (_showCreateDetailModal && _selectedDict != null)
+    {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div class="bg-white dark:bg-[#0e1726] rounded-2xl p-6 w-full max-w-md shadow-xl animate-fade-in">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-[#191e3a]">
+                    <h3 class="text-base font-bold text-[#0e1726] dark:text-white">
+                        @L["CreateDetail"] - @_selectedDict.DisplayText
+                    </h3>
+                    <button type="button" class="text-[#888ea8] hover:text-danger transition cursor-pointer" @onclick="CloseModal">✕</button>
+                </div>
+                <div class="space-y-4 py-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Code"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createDetailCode" placeholder="e.g. WAIT_PROCESS" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["DisplayName"] *</label>
+                        <input type="text" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createDetailDisplayText" placeholder="e.g. Pending" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0e1726] dark:text-white mb-1">@L["Order"]</label>
+                        <input type="number" class="form-input w-full px-3 py-2 rounded-xl text-xs bg-[#f6f8fa] dark:bg-[#121e32] border-none text-[#0e1726] dark:text-white outline-none" @bind="_createDetailOrder" />
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#191e3a]">
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#888ea8] hover:bg-gray-100 dark:hover:bg-[#121e32] transition cursor-pointer" @onclick="CloseModal">@L["Cancel"]</button>
+                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:shadow-md transition cursor-pointer" @onclick="CreateDetailAsync">@L["Save"]</button>
+                </div>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private List<PagingDataDictionaryOutput> _dictList = new();
+    private PagingDataDictionaryOutput? _selectedDict;
+    private List<PagingDataDictionaryDetailOutput> _details = new();
+
+    private string _dictSearch = string.Empty;
+    private bool _isLoadingDicts = true;
+    private bool _isLoadingDetails = false;
+
+    private bool _showCreateDictModal = false;
+    private string _createDictCode = string.Empty;
+    private string _createDictDisplayName = string.Empty;
+    private string _createDictDesc = string.Empty;
+
+    private bool _showCreateDetailModal = false;
+    private string _createDetailCode = string.Empty;
+    private string _createDetailDisplayText = string.Empty;
+    private int _createDetailOrder = 1;
+
+    private List<PagingDataDictionaryOutput> FilteredDicts => string.IsNullOrWhiteSpace(_dictSearch)
+        ? _dictList
+        : _dictList.Where(d => (d.Code?.Contains(_dictSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                               (d.DisplayText?.Contains(_dictSearch, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDictsAsync();
+    }
+
+    private async Task LoadDictsAsync()
+    {
+        _isLoadingDicts = true;
+        try
+        {
+            var res = await DataDictionaryAppService.GetPagingListAsync(new PagingDataDictionaryInput
+            {
+                PageIndex = 1,
+                PageSize = 100
+            });
+            _dictList = res.Items?.ToList() ?? new();
+
+            if (_dictList.Any() && _selectedDict == null)
+            {
+                await SelectDictAsync(_dictList.First());
+            }
+        }
+        catch
+        {
+            _dictList = new();
+        }
+        finally
+        {
+            _isLoadingDicts = false;
+        }
+    }
+
+    private async Task SelectDictAsync(PagingDataDictionaryOutput dict)
+    {
+        _selectedDict = dict;
+        await LoadDetailsAsync(dict.Id);
+    }
+
+    private async Task LoadDetailsAsync(Guid dictId)
+    {
+        _isLoadingDetails = true;
+        try
+        {
+            var res = await DataDictionaryAppService.GetPagingDetailListAsync(new PagingDataDictionaryDetailInput
+            {
+                DataDictionaryId = dictId,
+                PageIndex = 1,
+                PageSize = 100
+            });
+            _details = res.Items?.OrderBy(x => x.Order).ToList() ?? new();
+        }
+        catch
+        {
+            _details = new();
+        }
+        finally
+        {
+            _isLoadingDetails = false;
+        }
+    }
+
+    private void OpenCreateDictModal()
+    {
+        _createDictCode = string.Empty;
+        _createDictDisplayName = string.Empty;
+        _createDictDesc = string.Empty;
+        _showCreateDictModal = true;
+    }
+
+    private async Task CreateDictCategoryAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_createDictCode) || string.IsNullOrWhiteSpace(_createDictDisplayName)) return;
+
+        try
+        {
+            await DataDictionaryAppService.CreateAsync(new CreateDataDictinaryInput
+            {
+                Code = _createDictCode,
+                DisplayText = _createDictDisplayName,
+                Description = _createDictDesc
+            });
+            CloseModal();
+            await LoadDictsAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task DeleteDictTypeAsync(Guid id)
+    {
+        try
+        {
+            await DataDictionaryAppService.DeleteDataDictionaryTypeAsync(new Lion.AbpPro.Core.IdInput { Id = id });
+            _selectedDict = null;
+            await LoadDictsAsync();
+        }
+        catch
+        {
+        }
+    }
+
+    private void OpenCreateDetailModal()
+    {
+        _createDetailCode = string.Empty;
+        _createDetailDisplayText = string.Empty;
+        _createDetailOrder = _details.Any() ? _details.Max(x => x.Order) + 1 : 1;
+        _showCreateDetailModal = true;
+    }
+
+    private async Task CreateDetailAsync()
+    {
+        if (_selectedDict == null || string.IsNullOrWhiteSpace(_createDetailCode) || string.IsNullOrWhiteSpace(_createDetailDisplayText)) return;
+
+        try
+        {
+            await DataDictionaryAppService.CreateDetailAsync(new CreateDataDictinaryDetailInput
+            {
+                Id = _selectedDict.Id,
+                Code = _createDetailCode,
+                DisplayText = _createDetailDisplayText,
+                Order = _createDetailOrder
+            });
+            CloseModal();
+            await LoadDetailsAsync(_selectedDict.Id);
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task ToggleDetailStatusAsync(PagingDataDictionaryDetailOutput detail)
+    {
+        if (_selectedDict == null) return;
+        try
+        {
+            await DataDictionaryAppService.SetStatus(new SetDataDictinaryDetailInput
+            {
+                DataDictionaryId = _selectedDict.Id,
+                DataDictionayDetailId = detail.Id,
+                IsEnabled = !detail.IsEnabled
+            });
+            detail.IsEnabled = !detail.IsEnabled;
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task DeleteDetailAsync(Guid detailId)
+    {
+        if (_selectedDict == null) return;
+        try
+        {
+            await DataDictionaryAppService.DeleteAsync(new DeleteDataDictionaryDetailInput
+            {
+                DataDictionaryId = _selectedDict.Id,
+                DataDictionayDetailId = detailId
+            });
+            await LoadDetailsAsync(_selectedDict.Id);
+        }
+        catch
+        {
+        }
+    }
+
+    private void CloseModal()
+    {
+        _showCreateDictModal = false;
+        _showCreateDetailModal = false;
+    }
+}
